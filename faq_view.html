@@ -12,7 +12,7 @@
             --tab-blue: #003366;
         }
         .nkust-bg-blue { background-color: var(--nkust-blue); }
-    
+
         /* 手風琴 */
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
@@ -234,13 +234,54 @@ function buildTable(rows) {
     return `<div class="overflow-x-auto my-2"><table class="w-full text-sm border-collapse whitespace-normal"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
+// 一般文字:※ 開頭 = 重點區塊(到下一個 ※ 或「建工：」這類小標題才結束)
+// 「1.」「2、」開頭的行 = 編號清單
+function renderText(lines) {
+    let html = '';
+    let noteOpen = false;
+    const closeNote = () => { if (noteOpen) { html += '</div>'; noteOpen = false; } };
+
+    lines.forEach(raw => {
+        const line = raw.trim();
+        if (!line) { html += '<div class="h-2"></div>'; return; }
+
+        // ※ 重點標題:開新區塊
+        if (line.startsWith('※')) {
+            closeNote();
+            html += '<div class="my-2 border-l-4 border-[#425b8f] bg-blue-50 rounded-r px-3 py-2">'
+                  + `<div class="font-bold text-[#003366]">${linkify(line)}</div>`;
+            noteOpen = true;
+            return;
+        }
+
+        // 小標題,例如「建工：」「楠梓：」
+        if (/^[^\s：:]{1,10}[：:]$/.test(line)) {
+            closeNote();
+            html += `<div class="mt-3 font-bold text-gray-900">${linkify(line)}</div>`;
+            return;
+        }
+
+        // 編號:1. 2、 3) 等
+        const m = line.match(/^(\d+)\s*[.、．)）]\s*(.*)$/);
+        if (m) {
+            html += `<div class="flex gap-2 pl-1 mt-1"><span class="shrink-0 font-bold text-[#425b8f]">${m[1]}.</span><span class="flex-1">${linkify(m[2])}</span></div>`;
+            return;
+        }
+
+        html += `<div>${linkify(line)}</div>`;
+    });
+
+    closeNote();
+    return html;
+}
+
 function renderAnswer(raw) {
     const lines = String(raw).split('\n');
     const parts = [];
     let text = [];
     let rows = [];
 
-    const flushText = () => { if (text.length) { parts.push(linkify(text.join('\n'))); text = []; } };
+    const flushText = () => { if (text.length) { parts.push(renderText(text)); text = []; } };
     const flushRows = () => {
         if (rows.length >= 2) { flushText(); parts.push(buildTable(rows)); }
         else rows.forEach(l => text.push(l));   // 只有單行時當一般文字
@@ -489,7 +530,7 @@ function switchDept(k) {
     renderTabs();
     loadDept();
 }
-    
+
 window.addEventListener('popstate', () => {
     dept = readDept();
     renderTabs();
