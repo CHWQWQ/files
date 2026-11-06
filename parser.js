@@ -28,6 +28,8 @@ function parseFaqText(text, deptCode, options = {}) {
     const linkify = options.linkify || (s => s);
     const warnings = [];
     const cats = [];
+    const ANSWER_START = [/^※/, /^\d+\s*[.、．)）]/, /^[^\s：:]{1,10}[：:]$/];
+    const looksLikeAnswerStart = (s) => ANSWER_START.some(re => re.test(s));
     let cat = null;
     let sub = '';
     let q = null;
@@ -86,7 +88,14 @@ function parseFaqText(text, deptCode, options = {}) {
         // 其他行：接在目前欄位後面（答案可以多行）
         if (q && field) {
             if (field === 'question') {
-                if (s) q.question += ' ' + s;
+                if (!s) return;
+                if (looksLikeAnswerStart(s)) {
+                    q.answer = raw.replace(/\s+$/, '');
+                    field = 'answer';
+                    warnings.push(`第 ${lineNo} 行：「${q.question.slice(0, 20)}」沒有「回答：」，已從這行起視為答案`);
+                } else {
+                    q.question += ' ' + s;
+                }
             } else {
                 q.answer += '\n' + raw.replace(/\s+$/, '');
             }
