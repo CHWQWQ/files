@@ -336,17 +336,11 @@ $('searchBox').addEventListener('input', (e) => {
 let tocTargets = [];
 
 function buildToc() {
-    const multi = dept === ALL;
-    const els = document.querySelectorAll('#content .dept-title, #content .sub-head, #content .label, #content details.q');
-    tocTargets = Array.from(els);
-    $('tocList').innerHTML = tocTargets.map(el => {
-        let level, text;
-        if (el.classList.contains('dept-title')) { level = 0; text = el.textContent; }
-        else if (el.classList.contains('sub-head') || el.classList.contains('label')) { level = 1; text = el.textContent; }
-        else { level = 2; text = el.querySelector('summary span').textContent.replace(/^Q:\s*/, ''); }
-        if (!multi) level = Math.max(0, level - 1);
-        return `<a href="#${escapeHtml(el.id)}" data-id="${escapeHtml(el.id)}" class="toc-link toc-l${level}">${escapeHtml(text.trim())}</a>`;
-    }).join('');
+    // 只列出藥丸層級(子分類標題與無答案的標題)
+    tocTargets = Array.from(document.querySelectorAll('#content .sub-head, #content .label'));
+    $('tocList').innerHTML = tocTargets.map(el =>
+        `<a href="#${escapeHtml(el.id)}" data-id="${escapeHtml(el.id)}" class="toc-link">${escapeHtml(el.textContent.trim())}</a>`
+    ).join('');
     updateSpy();
 }
 
