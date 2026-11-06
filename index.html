@@ -3,111 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>常見問題 FAQ - 國立高雄科技大學 學務處</title>
-    <!-- 引入 Tailwind CSS -->
+    <title>常見問題 FAQ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        /* 高科大專屬配色與截圖配色 */
-        :root {
-            --nkust-blue: #003366; 
-            --tab-blue: #425b8f; 
-            
-        }
-        .nkust-bg-blue { background-color: var(--nkust-blue); }
-        .nkust-text-blue { color: var(--nkust-blue); }
-        
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
-        
-        details[open] > summary .chev { transform: rotate(180deg); }
-        details[open] > summary {
-            background-color: #f8fafc;
-        }
-        .chev { transition: transform .3s ease; }
-        
-        .q-wrapper { border-bottom: 1px solid #e5e7eb; }
-        .q-wrapper:last-child { border-bottom: none; }
-
-        /* 橫向標籤樣式 */
-        .tab-active {
-            background-color: white;
-            color: var(--tab-blue);
-            border-top: 2px solid var(--tab-blue);
-            border-left: 2px solid var(--tab-blue);
-            border-right: 2px solid var(--tab-blue);
-            border-bottom: 3px solid white;
-            font-weight: bold;
-            z-index: 10;
-        }
-        .tab-inactive {
-            background-color: var(--tab-blue);
-            color: white;
-            border-top: 2px solid transparent;
-            border-left: 2px solid transparent;
-            border-right: 2px solid transparent;
-            border-bottom: 3px solid var(--tab-orange);
-        }
-        .tab-inactive:hover {
-            background-color: #354a75;
-        }
-        .tab-container {
-            border-bottom: 3px solid var(--tab-orange);
-        }
+        details[open] > summary .chev { transform: rotate(90deg); }
+        .chev { transition: transform .2s ease; }
+        .q-hit { background: #fef9c3; }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
-    
-    <!-- 頂部 Header -->
-    <!-- <header class="nkust-bg-blue text-white shadow-md relative z-10">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="text-2xl font-bold tracking-wider">國立高雄科技大學</div>
-                <div class="text-xl border-l-2 border-white/30 pl-3 ml-2">學生事務處</div>
+<body class="min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">常見問題 FAQ</h1>
+                    <p id="deptLine" class="text-sm text-gray-500 mt-1"></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="deptSelect" class="text-sm text-gray-600">單位</label>
+                    <select id="deptSelect" class="input-modern text-sm py-2 px-3"></select>
+                </div>
             </div>
+            <input id="searchBox" type="search" placeholder="搜尋問題或答案…" class="input-modern w-full mt-4" aria-label="搜尋問題或答案" disabled>
+            <nav id="catNav" class="flex flex-wrap gap-2 mt-4" aria-label="類別"></nav>
         </div>
-    </header> -->
+    </header>
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">常見問題 FAQ</h1>
-
-        <!-- 橫向主題標籤 (Tabs) -->
-        <div class="flex flex-wrap tab-container relative pt-2" id="topTabs"></div>
-
-        <!-- 內容區塊 -->
-        <main class="bg-white p-6 shadow-sm border border-t-0 border-gray-200 min-h-[500px]">
-            
-            <!-- 搜尋框 -->
-            <div class="relative mb-8">
-                <input id="searchBox" type="search" placeholder="請輸入關鍵字搜尋問題或答案…" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-gray-50 transition-all" aria-label="搜尋問題或答案" disabled>
-                <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </div>
-
-            <!-- 狀態提示區 -->
-            <div id="status" class="hidden"></div>
-            
-            <!-- FAQ 手風琴列表區 -->
-            <div id="content" class="space-y-6"></div>
-            
-            <p id="noResult" class="hidden text-center text-gray-500 py-10 bg-white rounded-lg">找不到符合的問答，請嘗試更換搜尋關鍵字。</p>
-        </main>
-    </div>
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <div id="status" class="hidden"></div>
+        <div id="content" class="space-y-6"></div>
+        <p id="noResult" class="hidden text-center text-gray-500 py-10">找不到符合的問題</p>
+    </main>
 
     <script>
-    // 主題分類對應
     const DEPARTMENTS = {
-        'hesp': '高教深耕',
-        'clss': '生輔教中心',
-        'scd': '諮商輔導組',
-        'shsd': '住宿服務組',
-        'saad': '就學服務組',
-        'hd': '衛生保健組',
-        'esd': '課外活動組'
+        shsd: '住宿服務組', isrc: '原民中心', dsa: '學務長室', saad: '就學服務組', clss: '生輔教中心',
+        hd: '衛生保健組', esd: '課外活動組', scd: '諮商輔導組', hesp: '高教深耕'
     };
-    
     const $ = (id) => document.getElementById(id);
     const params = new URLSearchParams(location.search);
-    let dept = params.get('dept') in DEPARTMENTS ? params.get('dept') : 'hesp';
+    let dept = params.get('dept') in DEPARTMENTS ? params.get('dept') : 'shsd';
+    // 資料來源：?src=檔名.json 優先；否則讀同資料夾的 faq_{單位代碼}.json
     const src = params.get('src') || `faq_${dept}.json`;
 
     function escapeHtml(s) {
@@ -115,64 +54,58 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    // 答案只允許編輯器產生的 <a> 超連結（且只限 http/https），其餘 HTML 一律當純文字顯示
     function renderAnswer(raw) {
         return escapeHtml(raw).replace(
             /&lt;a href=&quot;(https?:\/\/(?:[^&\s]|&amp;)+)&quot;(?:(?!&gt;).)*?&gt;(.*?)&lt;\/a&gt;/g,
-            (m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline font-medium">${text}</a>`
+            (m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${text}</a>`
         );
     }
 
     function showStatus(html, kind) {
         const box = $('status');
-        box.className = `rounded-lg p-5 mb-6 text-sm leading-relaxed border ${kind === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`;
+        box.className = `rounded-xl p-5 mb-6 text-sm leading-relaxed ${kind === 'error' ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-blue-50 text-blue-900'}`;
         box.innerHTML = html;
-        box.classList.remove('hidden');
-    }
-
-    function renderTabs() {
-        $('topTabs').innerHTML = Object.entries(DEPARTMENTS).map(([k, v]) => {
-            const isActive = k === dept;
-            const styleClass = isActive ? 'tab-active' : 'tab-inactive';
-            return `<button value="${k}" class="dept-tab px-5 py-2.5 rounded-t-md text-[15px] transition-colors relative -mb-[3px] mr-1 ${styleClass}">${v}</button>`;
-        }).join('');
-
-        document.querySelectorAll('.dept-tab').forEach(btn => {
-            btn.addEventListener('click', (e) => { location.search = `?dept=${e.target.value}`; });
-        });
     }
 
     function render(data) {
-        document.title = `${DEPARTMENTS[dept]} - 常見問題 FAQ`;
-        
+        const deptCode = (data[0] && data[0].id.match(/^([a-z]+)_/) || [])[1];
+        if (deptCode in DEPARTMENTS) { dept = deptCode; $('deptSelect').value = dept; }
+        $('deptLine').textContent = DEPARTMENTS[dept] || '';
+        document.title = `${DEPARTMENTS[dept] || ''} 常見問題 FAQ`;
+
+        $('catNav').innerHTML = data.map(c =>
+            `<a href="#cat-${escapeHtml(c.id)}" class="px-3 py-1.5 rounded-full text-sm bg-white border border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600">${escapeHtml(c.categoryName)}</a>`
+        ).join('');
+
         $('content').innerHTML = data.map(cat => {
             let lastSub = null;
             const items = cat.questions.map(q => {
                 let head = '';
                 if (q.subCategory && q.subCategory !== lastSub) {
-                    head = `<div class="pt-4 pb-2"><span class="text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(q.subCategory)}</span></div>`;
+                    head = `<h3 class="sub-head pt-4 pb-1 text-sm font-semibold text-blue-700 border-b border-blue-100">${escapeHtml(q.subCategory)}</h3>`;
                 }
                 lastSub = q.subCategory || null;
+                // 沒有答案的「問題」其實是小標題，用標籤顯示而不是可展開的問答
                 if (!q.answer.trim()) {
                     return head + `<p class="label pt-3 font-medium text-gray-600" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
                 }
                 return head + `
-                <div class="q-wrapper">
-                    <details id="${escapeHtml(q.id)}" class="q group">
-                        <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
-                            <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">Q: ${escapeHtml(q.question)}</span>
-                            <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </summary>
-                        <div class="ans pb-5 pt-1 pl-7 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
-                    </details>
-                </div>`;
+                <details id="${escapeHtml(q.id)}" class="q rounded-lg border border-gray-200 bg-white">
+                    <summary class="flex items-start gap-3 p-4">
+                        <svg class="chev w-4 h-4 mt-1 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"></polyline></svg>
+                        <span class="font-medium text-gray-800">${escapeHtml(q.question)}</span>
+                    </summary>
+                    <div class="ans px-4 pb-4 pl-11 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
+                </details>`;
             }).join('');
-            
-            return `<section id="cat-${escapeHtml(cat.id)}" class="cat mb-2">
-                <div class="">${items}</div></section>`;
+            return `<section id="cat-${escapeHtml(cat.id)}" class="cat card-modern p-5 md:p-6 scroll-mt-4">
+                <h2 class="text-xl font-bold text-gray-800 mb-3">${escapeHtml(cat.categoryName)}</h2>
+                <div class="space-y-2">${items}</div></section>`;
         }).join('');
 
         $('searchBox').disabled = false;
-        $('status').classList.add('hidden');
+        $('status').className = 'hidden';
         const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
         if (target && target.tagName === 'DETAILS') { target.open = true; target.scrollIntoView(); }
     }
@@ -184,37 +117,54 @@
     }
 
     function load(data) {
-        if (!validate(data)) { showStatus('這個檔案不是正確的 FAQ JSON 格式。', 'error'); return; }
+        if (!validate(data)) { showStatus('這個檔案不是正確的 FAQ JSON 格式（請使用 FAQ 編輯器匯出的檔案）。', 'error'); return; }
         if (data.length === 0) { showStatus('這份 FAQ 目前沒有內容。', 'error'); return; }
         render(data);
     }
 
+    // 搜尋：比對問題與答案文字，隱藏不符合的問題與沒有結果的類別
     $('searchBox').addEventListener('input', (e) => {
         const kw = e.target.value.trim().toLowerCase();
         let hits = 0;
         document.querySelectorAll('#content .cat').forEach(cat => {
             let catHits = 0;
-            cat.querySelectorAll('.q-wrapper').forEach(wrap => {
-                const d = wrap.querySelector('details');
+            cat.querySelectorAll('.q').forEach(d => {
                 const match = !kw || d.textContent.toLowerCase().includes(kw);
-                wrap.classList.toggle('hidden', !match);
+                d.classList.toggle('hidden', !match);
                 if (kw && match) d.open = true; else if (!kw) d.open = false;
                 if (match) catHits++;
             });
-            cat.querySelectorAll('.label').forEach(el => el.classList.toggle('hidden', !!kw));
+            // 搜尋時隱藏小標題與標籤（它們可能已經沒有底下的問題）
+            cat.querySelectorAll('.sub-head, .label').forEach(el => el.classList.toggle('hidden', !!kw));
             cat.classList.toggle('hidden', !!kw && catHits === 0);
             hits += catHits;
         });
         $('noResult').classList.toggle('hidden', !kw || hits > 0);
     });
 
-    renderTabs();
+    // 單位選單：切換後重新載入該單位的 JSON
+    $('deptSelect').innerHTML = Object.entries(DEPARTMENTS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+    $('deptSelect').value = dept;
+    $('deptSelect').addEventListener('change', (e) => { location.search = `?dept=${e.target.value}`; });
 
+    // 讀取資料；直接雙擊開啟（file://）時瀏覽器會擋 fetch，改提供選檔方式
+    const pickerHtml = `<label class="inline-block mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">選擇 JSON 檔案<input id="filePick" type="file" accept=".json" class="hidden"></label>`;
+    function bindPicker() {
+        const pick = $('filePick');
+        if (pick) pick.addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            f.text().then(t => { try { load(JSON.parse(t)); } catch (err) { showStatus('無法讀取：不是有效的 JSON 檔案。', 'error'); } });
+        });
+    }
     fetch(src)
         .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(load)
         .catch(() => {
-            showStatus(`系統正在建置中。<br>讀不到對應的資料檔 <code class="bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-800">${escapeHtml(src)}</code>。<br>（請確認對應的 JSON 檔案已上傳至專案資料夾中）`, 'error');
+            showStatus(`讀不到資料檔 <code class="bg-white px-1 rounded">${escapeHtml(src)}</code>。<br>
+                請確認檔案放在這個頁面的同一個資料夾，且網頁是透過伺服器開啟（直接雙擊檔案開啟時瀏覽器不允許讀檔）。<br>
+                你也可以直接選擇檔案預覽：${pickerHtml}`, 'error');
+            bindPicker();
         });
     </script>
 </body>
