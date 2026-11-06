@@ -114,24 +114,27 @@
         </main>
     </div>
 
-   <script>
-       
-// 主題分類對應
+  <script>
+// 主題分類對應(顯示順序就是這裡的順序,想調整直接改排列)
 const DEPARTMENTS = {
+    'scd': '諮商輔導組',
     'shsd': '住宿服務組',
-    'isrc': '原民中心',
     'dsa': '學務長室',
+    'isrc': '原民中心',
     'saad': '就學服務組',
     'clss': '生輔教中心',
     'hd': '衛生保健組',
     'esd': '課外活動組',
-    'scd': '諮商輔導組',
     'hesp': '高教深耕'
 };
+const ALL = 'all';
 
 const $ = (id) => document.getElementById(id);
-let dept = new URLSearchParams(location.search).get('dept');
-if (!(dept in DEPARTMENTS)) dept = 'shsd';
+function readDept() {
+    const d = new URLSearchParams(location.search).get('dept');
+    return (d === ALL || d in DEPARTMENTS) ? d : ALL;
+}
+let dept = readDept();
 
 function escapeHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -153,9 +156,9 @@ function showStatus(html, kind) {
 }
 
 function renderTabs() {
-    $('topTabs').innerHTML = Object.entries(DEPARTMENTS).map(([k, v]) => {
-        const isActive = k === dept;
-        const styleClass = isActive ? 'tab-active' : 'tab-inactive';
+    const tabs = [[ALL, '全部'], ...Object.entries(DEPARTMENTS)];
+    $('topTabs').innerHTML = tabs.map(([k, v]) => {
+        const styleClass = k === dept ? 'tab-active' : 'tab-inactive';
         return `<button value="${k}" class="dept-tab px-5 py-2.5 rounded-t-md text-[15px] transition-colors relative -mb-[3px] mr-1 ${styleClass}">${v}</button>`;
     }).join('');
 
@@ -164,10 +167,9 @@ function renderTabs() {
     });
 }
 
-function render(data) {
-    document.title = `${DEPARTMENTS[dept]} - 常見問題 FAQ`;
-
-    $('content').innerHTML = data.map(cat => {
+// 一個組別的所有分類 → HTML
+function renderCats(data) {
+    return data.map(cat => {
         let lastSub = null;
         const items = cat.questions.map(q => {
             let head = '';
@@ -192,6 +194,18 @@ function render(data) {
 
         return `<section id="cat-${escapeHtml(cat.id)}" class="cat mb-2"><div class="">${items}</div></section>`;
     }).join('');
+}
+
+// results: [{ key, data }, ...]
+function render(results) {
+    const multi = dept === ALL;
+    document.title = `${multi ? '全部' : DEPARTMENTS[dept]} - 常見問題 FAQ`;
+
+    $('content').innerHTML = results.map(({ key, data }) => `
+        <div class="dept-block" data-dept="${key}">
+            ${multi ? `<h2 class="dept-title text-xl font-bold text-[#003366] border-l-4 border-[#003366] pl-3 mb-2">${escapeHtml(DEPARTMENTS[key])}</h2>` : ''}
+            <div class="space-y-6">${renderCats(data)}</div>
+        </div>`).join('');
 
     $('searchBox').disabled = false;
     $('status').classList.add('hidden');
@@ -200,17 +214,12 @@ function render(data) {
 }
 
 function validate(data) {
-    return Array.isArray(data) && data.every(c => c && typeof c.id === 'string' && typeof c.categoryName === 'string'
+    return Array.isArray(data) && data.length > 0 && data.every(c => c && typeof c.id === 'string' && typeof c.categoryName === 'string'
         && Array.isArray(c.questions) && c.questions.every(q => q && typeof q.id === 'string'
             && typeof q.question === 'string' && typeof q.answer === 'string'));
 }
 
-function load(data) {
-    if (!validate(data)) { showStatus('這個檔案不是正確的 FAQ JSON 格式。', 'error'); return; }
-    if (data.length === 0) { showStatus('這份 FAQ 目前沒有內容。', 'error'); return; }
-    render(data);
-}
-
+// 搜尋(跨所有已載入的組別)
 $('searchBox').addEventListener('input', (e) => {
     const kw = e.target.value.trim().toLowerCase();
     let hits = 0;
@@ -245,14 +254,28 @@ $('searchBox').addEventListener('input', (e) => {
         hits += catHits;
     });
 
+    // 整個組別都沒有符合時,連組別標題一起隱藏
+    document.querySelectorAll('#content .dept-block').forEach(block => {
+        const anyVisible = Array.from(block.querySelectorAll('.cat')).some(c => !c.classList.contains('hidden'));
+        block.classList.toggle('hidden', !!kw && !anyVisible);
+    });
+
     $('noResult').classList.toggle('hidden', !kw || hits > 0);
 });
 
 let loadToken = 0;
 
+function fetchDept(key) {
+    const src = `faq_${key}.json`;
+    return fetch(src)
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(data => { if (!validate(data)) throw new Error('JSON 格式不正確或沒有內容'); return { key, data }; })
+        .catch(err => { throw { key, src, message: err.message }; });
+}
+
 function loadDept() {
     const token = ++loadToken;
-    const src = new URLSearchParams(location.search).get('src') || `faq_${dept}.json`;
+    const keys = dept === ALL ? Object.keys(DEPARTMENTS) : [dept];
 
     $('searchBox').value = '';
     $('searchBox').disabled = true;
@@ -260,14 +283,27 @@ function loadDept() {
     $('noResult').classList.add('hidden');
     showStatus('載入中…', 'info');
 
-    fetch(src)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => { if (token === loadToken) load(data); })
-        .catch(err => {
-            if (token !== loadToken) return;
-            console.error(err);
-            showStatus(`讀取資料失敗。<br>檔案:<code>${escapeHtml(src)}</code><br>原因:<code>${escapeHtml(err.message)}</code>`, 'error');
-        });
+    Promise.allSettled(keys.map(fetchDept)).then(settled => {
+        if (token !== loadToken) return;
+
+        const ok = settled.filter(s => s.status === 'fulfilled').map(s => s.value);
+        const failed = settled.filter(s => s.status === 'rejected').map(s => s.reason);
+        failed.forEach(f => console.error('載入失敗', f));
+
+        if (ok.length === 0) {
+            const f = failed[0];
+            showStatus(`讀取資料失敗。<br>檔案:<code>${escapeHtml(f.src)}</code><br>原因:<code>${escapeHtml(f.message)}</code>`, 'error');
+            return;
+        }
+
+        render(ok);
+
+        // 「全部」模式下,有幾組讀不到時提醒一下,但不影響其他組顯示
+        if (failed.length > 0) {
+            const names = failed.map(f => DEPARTMENTS[f.key]).join('、');
+            showStatus(`以下組別目前沒有資料檔,已略過:${escapeHtml(names)}`, 'info');
+        }
+    });
 }
 
 function switchDept(k) {
@@ -279,15 +315,13 @@ function switchDept(k) {
 }
 
 window.addEventListener('popstate', () => {
-    const d = new URLSearchParams(location.search).get('dept');
-    dept = d in DEPARTMENTS ? d : 'shsd';
+    dept = readDept();
     renderTabs();
     loadDept();
 });
 
 renderTabs();
 loadDept();
-       
 </script>
     <footer class="bg-[#00264d] text-white mt-12 w-full flex-1">
     <div class="max-w-6xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-3 text-sm leading-relaxed">
