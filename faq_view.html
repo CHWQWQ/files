@@ -156,7 +156,7 @@
                 }
                 lastSub = q.subCategory || null;
                 if (!q.answer.trim()) {
-                    return head + `<p class="label pt-3 font-medium text-gray-600" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
+                    return head + `<p class="label pt-4 font-bold border-b border-gray-300 text-gray-600" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
                 }
                 return head + `
                 <div class="q-wrapper">
