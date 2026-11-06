@@ -1,500 +1,147 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>常見問題 FAQ - 國立高雄科技大學 學務處</title>
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --nkust-blue: #003366;
-            --tab-blue: #003366;
-        }
-        .nkust-bg-blue { background-color: var(--nkust-blue); }
-        /* 手風琴 */
-        details > summary { list-style: none; cursor: pointer; }
-        details > summary::-webkit-details-marker { display: none; }
-        details[open] > summary .chev { transform: rotate(180deg); }
-        details[open] > summary { background-color: #f8fafc; }
-        .chev { transition: transform .3s ease; }
+// 各單位 FAQ 原稿（txt）解析器
+//
+// 原稿格式：
+//   【類別】                ← 單獨一行
+//   〔子類別〕              ← 單獨一行（選填）
+//   問題：xxx
+//   回答：xxx（可多行）
+//
+// 轉成編輯器使用的格式：
+//   [{ id, categoryName, questions: [{ id, question, answer, subCategory? }] }]
 
-        .q-wrapper { border-bottom: 1px solid #e5e7eb; }
-        .q-wrapper:last-child { border-bottom: none; }
-
-        /* 膠囊分頁 */
-        .tab-pill {
-            padding: 10px 26px;
-            border-radius: 9999px;
-            font-size: 15px;
-            font-weight: 700;
-            transition: background-color .2s, color .2s;
-        }
-        .tab-active {
-            background-color: #003366;
-            color: #fff;
-        }
-        .tab-inactive {
-            background-color: #efefef;
-            color: #333;
-        }
-        .tab-inactive:hover {
-            background-color: #e0e0e0;
-        }
-/**/
-        /* 目錄 */
-        .toc-list { border-left: 2px solid #e5e7eb; overflow-y: auto; }
-        .toc-link {
-            display: block; margin-left: -2px; padding: 6px 12px;
-            line-height: 1.4; font-size: 14px; color: #6b7280;
-            border-left: 3px solid transparent;
-        }
-        .toc-link:hover { color: var(--nkust-blue); }
-        .toc-link.hidden { display: none; }
-        .toc-l0 { font-weight: 700; color: #374151; }
-        .toc-l1 { padding-left: 24px; }
-        .toc-l2 { padding-left: 38px; font-size: 13px; }
-        .toc-link.active { color: #111827; font-weight: 700; border-left-color: var(--nkust-blue); }
-        #content [id] { scroll-margin-top: 16px; }
-    </style>
-</head>
-<body class="min-h-screen bg-gray-50 font-sans flex flex-col">
-    <!-- 頂部細列 -->
-    <div class="bg-[#00264d] text-white text-xs">
-        <div class="max-w-6xl mx-auto px-4 py-1.5 flex justify-end gap-5">
-            <a href="https://www.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學校首頁</a>
-            <a href="https://stu.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學務處官網</a>
-            <a href="#" class="hover:underline">English</a>
-        </div>
-    </div>
-
-    <!-- 主標頭 -->
-    <header class="nkust-bg-blue text-white shadow-md relative z-10">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <a href="https://stu.nkust.edu.tw" class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-white/15 border border-white/40 flex items-center justify-center text-xl font-bold">高科</div>
-                <div>
-                    <div class="text-2xl font-bold tracking-wider leading-tight">國立高雄科技大學 <span class="font-normal border-l-2 border-white/30 pl-3 ml-2">學生事務處</span></div>
-                    <div class="text-xs text-white/70 tracking-wide">National Kaohsiung University of Science and Technology</div>
-                </div>
-            </a>
-            <nav class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm">
-                <a href="https://stu.nkust.edu.tw" class="hover:underline">首頁</a>
-                <a href="index.html" class="hover:underline">常見問題</a>
-                <a href="https://stu.nkust.edu.tw" class="hover:underline">各組業務</a>
-            </nav>
-        </div>
-    </header>
-
-    <div class="max-w-6xl w-full mx-auto px-4 py-8 flex-1">
-
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">FAQ
-            <span class="block w-16 h-1 bg-gray-400 mx-auto rounded shadow-sm opacity-70 mt-2"></span>
-        </h1>
-
-        <!-- 膠囊分頁（包含全部與各組） -->
-        <div class="flex flex-wrap justify-center gap-3 mb-6" id="topTabs"></div>
-
-        <div class="lg:grid lg:grid-cols-[280px_1fr] lg:gap-6 items-start">
-
-            <!-- 左側快速目錄 (電腦版顯示) -->
-            <aside id="toc" class="hidden lg:flex flex-col sticky top-4 max-h-[calc(100vh-2rem)] bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-                <div class="flex items-center gap-2 font-bold text-gray-900 mb-3">
-                    <span class="w-1.5 h-5 rounded bg-[#003366]"></span>快速目錄
-                </div>
-                <nav id="tocList" class="toc-list flex-1"></nav>
-                <div class="h-1.5 bg-gray-200 rounded mt-3 shrink-0">
-                    <div id="tocBar" class="h-full bg-[#003366] rounded" style="width:0%"></div>
-                </div>
-            </aside>
-
-            <!-- 內容區塊 -->
-            <main id="mainBox" class="bg-white p-6 shadow-sm border border-gray-200 rounded-lg min-h-[500px] min-w-0">
-
-                <!-- 搜尋框 -->
-                <div class="relative mb-8">
-                    <input id="searchBox" type="search" placeholder="請輸入關鍵字搜尋問題或答案…" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-gray-50 transition-all" aria-label="搜尋問題或答案" disabled>
-                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </div>
-
-                <!-- 狀態提示區 -->
-                <div id="status" class="hidden"></div>
-
-                <!-- FAQ 手風琴列表區 -->
-                <div id="content" class="space-y-8"></div>
-
-                <p id="noResult" class="hidden text-center text-gray-500 py-10 bg-white rounded-lg">找不到符合的問答，請嘗試更換搜尋關鍵字。</p>
-            </main>
-        </div>
-    </div>
-
-    <footer class="bg-[#00264d] text-white mt-12 w-full">
-        <div class="max-w-6xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-3 text-sm leading-relaxed">
-            <div>
-                <div class="font-bold mb-2 border-b border-white/20 pb-1">校區地址</div>
-                <div class="mb-2">
-                    <div>第一校區</div>
-                    <div>824005 高雄市燕巢區大學路1號 / 811532 高雄市楠梓區卓越路2號</div>
-                    <div>07-6011000</div>
-                </div>
-                <div class="mb-2">
-                    <div>燕巢校區 / 建工校區 / 旗津校區 / 楠梓校區</div>
-                    <div>07-3814526</div>
-                </div>
-            </div>
-            <div>
-                <div class="font-bold mb-2 border-b border-white/20 pb-1">相關連結</div>
-                <ul class="space-y-1">
-                    <li><a class="hover:underline" href="https://www.nkust.edu.tw" target="_blank" rel="noopener">學校首頁</a></li>
-                    <li><a class="hover:underline" href="https://stu.nkust.edu.tw" target="_blank" rel="noopener">學務處官網</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="bg-black/25 text-center text-xs text-white/70 py-3">
-            Copyright © 國立高雄科技大學 學生事務處 All Rights Reserved.
-        </div>
-    </footer>
-
-<script>
-const DEPARTMENTS = {
-    'shsd': '住宿服務組',
-    'isrc': '原民中心',
-    'dsa': '學務長室',
-    'saad': '就學服務組',
-    'clss': '生輔教中心',
-    'hd': '衛生保健組',
-    'esd': '課外活動組',
-    'scd': '諮商輔導組',
-    'hesp': '高教深耕'
-};
-const ALL = 'all';
-let uid = 0;
-
-const $ = (id) => document.getElementById(id);
-function readDept() {
-    const d = new URLSearchParams(location.search).get('dept');
-    return (d === ALL || d in DEPARTMENTS) ? d : 'shsd';
-}
-let dept = readDept();
-
-function escapeHtml(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+// 讀取檔案內容：先嘗試 UTF-8，失敗再用 Big5（舊版 Windows 文字檔常見）
+function decodeTextFile(arrayBuffer) {
+    const bytes = new Uint8Array(arrayBuffer);
+    if (bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(bytes);
+    if (bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(bytes);
+    try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch (e) {
+        return new TextDecoder('big5').decode(bytes);
+    }
 }
 
-function linkify(raw) {
-    return escapeHtml(raw).replace(
-        /&lt;a href=&quot;(https?:\/\/(?:[^&\s]|&amp;)+)&quot;(?:(?!&gt;).)*?&gt;(.*?)&lt;\/a&gt;/g,
-        (m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline font-medium">${text}</a>`
-    );
-}
+// 解析原稿。回傳 { data, warnings, stats }
+//   deptCode：組別代碼，用來產生 ID（例如 shsd）
+//   options.linkify：答案轉換網址的函式（編輯器傳入 convertUrlsToLinks）
+function parseFaqText(text, deptCode, options = {}) {
+    const linkify = options.linkify || (s => s);
+    const warnings = [];
+    const cats = [];
+    const ANSWER_START = [/^※/, /^\d+\s*[.、．)）]/, /^[^\s：:]{1,10}[：:]$/];
+    const looksLikeAnswerStart = (s) => ANSWER_START.some(re => re.test(s));
+    let cat = null;
+    let sub = '';
+    let q = null;
+    let field = null; // 目前正在累積的欄位：'question' 或 'answer'
 
-const SEP = /[｜|]/;
+    const lines = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
 
-function buildTable(rows) {
-    const cells = rows.map(l => l.split(SEP).map(c => c.trim()));
-    const cols = Math.max(...cells.map(r => r.length));
-    const pad = (r) => { while (r.length < cols) r.push(''); return r; };
-    const th = 'bg-[#003366] text-white text-left font-bold px-3 py-2 border border-gray-200 align-top';
-    const tdFirst = 'bg-gray-50 font-bold text-gray-800 px-3 py-2 border border-gray-200 align-top whitespace-nowrap';
-    const td = 'px-3 py-2 border border-gray-200 align-top';
-
-    const head = pad(cells[0]).map(c => `<th class="${th}">${linkify(c)}</th>`).join('');
-    const body = cells.slice(1).map(r =>
-        '<tr>' + pad(r).map((c, i) => `<td class="${i === 0 ? tdFirst : td}">${linkify(c)}</td>`).join('') + '</tr>'
-    ).join('');
-
-    return `<div class="overflow-x-auto my-2"><table class="w-full text-sm border-collapse whitespace-normal"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
-}
-
-function renderText(lines) {
-    let html = '';
-    let noteOpen = false;
-    const closeNote = () => { if (noteOpen) { html += '</div>'; noteOpen = false; } };
-
-    lines.forEach(raw => {
-        const line = raw.trim();
-        if (!line) { html += '<div class="h-2"></div>'; return; }
-
-        if (line.startsWith('※')) {
-            closeNote();
-            html += '<div class="my-2 border-l-4 border-[#425b8f] bg-blue-50 rounded-r px-3 py-2">'
-                  + `<div class="font-bold text-[#003366]">${linkify(line)}</div>`;
-            noteOpen = true;
-            return;
-        }
-
-        if (/^[^\s：:]{1,10}[：:]$/.test(line)) {
-            closeNote();
-            html += `<div class="mt-3 font-bold text-gray-900">${linkify(line)}</div>`;
-            return;
-        }
-
-        const m = line.match(/^(\d+)\s*[.、．)）]\s*(.*)$/);
-        if (m) {
-            html += `<div class="flex gap-2 pl-1 mt-1"><span class="shrink-0 font-bold text-[#425b8f]">${m[1]}.</span><span class="flex-1">${linkify(m[2])}</span></div>`;
-            return;
-        }
-
-        html += `<div>${linkify(line)}</div>`;
-    });
-
-    closeNote();
-    return html;
-}
-
-function renderAnswer(raw) {
-    const lines = String(raw).split('\n');
-    const parts = [];
-    let text = [];
-    let rows = [];
-
-    const flushText = () => { if (text.length) { parts.push(renderText(text)); text = []; } };
-    const flushRows = () => {
-        if (rows.length >= 2) { flushText(); parts.push(buildTable(rows)); }
-        else rows.forEach(l => text.push(l));
-        rows = [];
+    const startCategory = (name) => {
+        cat = { name, questions: [] };
+        cats.push(cat);
+        sub = '';
+        q = null;
+        field = null;
     };
 
-    lines.forEach(line => {
-        if (line.trim() && SEP.test(line)) rows.push(line);
-        else { flushRows(); text.push(line); }
-    });
-    flushRows();
-    flushText();
-    return parts.join('');
-}
+    lines.forEach((raw, i) => {
+        const lineNo = i + 1;
+        const s = raw.trim();
 
-function showStatus(html, kind) {
-    const box = $('status');
-    box.className = `rounded-lg p-5 mb-6 text-sm leading-relaxed border ${kind === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`;
-    box.innerHTML = html;
-    box.classList.remove('hidden');
-}
+        // 【類別】必須單獨一行。像「【操作步驟】於學校首頁…」這種後面還有文字的是備註，不算類別
+        let m = s.match(/^【([^】]+)】$/);
+        if (m) { startCategory(m[1].trim()); return; }
 
-function renderTabs() {
-    const tabs = [[ALL, '全部'], ...Object.entries(DEPARTMENTS)];
-    $('topTabs').innerHTML = tabs.map(([k, v]) => {
-        const styleClass = k === dept ? 'tab-active' : 'tab-inactive';
-        return `<button value="${k}" class="dept-tab tab-pill ${styleClass}">${v}</button>`;
-    }).join('');
-
-    document.querySelectorAll('.dept-tab').forEach(btn => {
-        btn.addEventListener('click', (e) => switchDept(e.currentTarget.value));
-    });
-}
-
-function renderCats(data) {
-    return data.map(cat => {
-        let lastSub = null;
-        const items = cat.questions.map(q => {
-            let head = '';
-            if (q.subCategory && q.subCategory !== lastSub) {
-                head = `<div id="toc-${uid++}" class="sub-head pt-4 pb-2"><span class="text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(q.subCategory)}</span></div>`;
-            }
-            lastSub = q.subCategory || null;
-            if (!q.answer.trim()) {
-                return head + `<p id="toc-${uid++}" class="label pt-4 font-bold border-b border-gray-300 text-[#425b8f]" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
-            }
-            return head + `
-            <div class="q-wrapper">
-                <details id="${escapeHtml(q.id)}" class="q group">
-                    <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
-                        <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">${escapeHtml(q.question)}</span>
-                        <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </summary>
-                    <div class="ans pb-5 pt-1 pl-7 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
-                </details>
-            </div>`;
-        }).join('');
-
-        return `<section id="cat-${escapeHtml(cat.id)}" class="cat mb-2"><div class="">${items}</div></section>`;
-    }).join('');
-}
-
-function render(results) {
-    uid = 0;
-    const multi = dept === ALL;
-    document.title = `${multi ? '全部' : DEPARTMENTS[dept]} - 常見問題 FAQ`;
-
-    $('content').innerHTML = results.map(({ key, data }) => `
-        <div class="dept-block" data-dept="${key}">
-            ${multi ? `<h2 id="dept-${key}" class="dept-title text-xl font-bold text-[#003366] border-l-4 border-[#003366] pl-3 mb-2">${escapeHtml(DEPARTMENTS[key])}</h2>` : ''}
-            <div class="space-y-6">${renderCats(data)}</div>
-        </div>`).join('');
-
-    $('searchBox').disabled = false;
-    $('status').classList.add('hidden');
-    const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
-    if (target && target.tagName === 'DETAILS') { target.open = true; target.scrollIntoView(); }
-    buildToc();
-}
-
-function validate(data) {
-    return Array.isArray(data) && data.length > 0 && data.every(c => c && typeof c.id === 'string' && typeof c.categoryName === 'string'
-        && Array.isArray(c.questions) && c.questions.every(q => q && typeof q.id === 'string'
-            && typeof q.question === 'string' && typeof q.answer === 'string'));
-}
-
-$('searchBox').addEventListener('input', (e) => {
-    const kw = e.target.value.trim().toLowerCase();
-    let hits = 0;
-
-    document.querySelectorAll('#content .cat').forEach(cat => {
-        let catHits = 0;
-
-        cat.querySelectorAll('.q-wrapper').forEach(wrap => {
-            const d = wrap.querySelector('details');
-            const match = !kw || d.textContent.toLowerCase().includes(kw);
-            wrap.classList.toggle('hidden', !match);
-            if (match) catHits++;
-        });
-
-        const nodes = Array.from(cat.querySelector('div').children);
-        nodes.forEach((el, i) => {
-            const isSub = el.classList.contains('sub-head');
-            const isLabel = el.classList.contains('label');
-            if (!isSub && !isLabel) return;
-
-            let visible = false;
-            for (let j = i + 1; j < nodes.length; j++) {
-                const n = nodes[j];
-                if (n.classList.contains('sub-head')) break;
-                if (isLabel && n.classList.contains('label')) break;
-                if (n.classList.contains('q-wrapper') && !n.classList.contains('hidden')) { visible = true; break; }
-            }
-            el.classList.toggle('hidden', !!kw && !visible);
-        });
-
-        cat.classList.toggle('hidden', !!kw && catHits === 0);
-        hits += catHits;
-    });
-
-    document.querySelectorAll('#content .dept-block').forEach(block => {
-        const anyVisible = Array.from(block.querySelectorAll('.cat')).some(c => !c.classList.contains('hidden'));
-        block.classList.toggle('hidden', !!kw && !anyVisible);
-    });
-
-    $('noResult').classList.toggle('hidden', !kw || hits > 0);
-    syncToc();
-});
-
-let tocTargets = [];
-
-function buildToc() {
-    tocTargets = Array.from(document.querySelectorAll('#content .sub-head, #content .label'));
-    $('tocList').innerHTML = tocTargets.map(el =>
-        `<a href="#${escapeHtml(el.id)}" data-id="${escapeHtml(el.id)}" class="toc-link">${escapeHtml(el.textContent.trim())}</a>`
-    ).join('');
-    updateSpy();
-}
-
-function syncToc() {
-    $('tocList').querySelectorAll('.toc-link').forEach(a => {
-        const t = document.getElementById(a.dataset.id);
-        a.classList.toggle('hidden', !t || !!t.closest('.hidden'));
-    });
-    updateSpy();
-}
-
-function updateSpy() {
-    const list = $('tocList');
-    const links = list.querySelectorAll('.toc-link');
-    let current = -1;
-    tocTargets.forEach((t, i) => {
-        if (t.closest('.hidden')) return;
-        if (t.getBoundingClientRect().top <= 140) current = i;
-    });
-    links.forEach((a, i) => a.classList.toggle('active', i === current));
-
-    const active = links[current];
-    if (active) {
-        const lr = active.getBoundingClientRect(), br = list.getBoundingClientRect();
-        if (lr.top < br.top || lr.bottom > br.bottom) list.scrollTop += lr.top - br.top - br.height / 2;
-    }
-
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    $('tocBar').style.width = (max > 0 ? Math.min(100, window.scrollY / max * 100) : 0) + '%';
-}
-
-$('tocList').addEventListener('click', (e) => {
-    const a = e.target.closest('.toc-link');
-    if (!a) return;
-    e.preventDefault();
-    const t = document.getElementById(a.dataset.id);
-    if (!t) return;
-    if (t.tagName === 'DETAILS') t.open = true;
-    t.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-
-let ticking = false;
-window.addEventListener('scroll', () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(() => { updateSpy(); ticking = false; });
-}, { passive: true });
-
-$('content').addEventListener('toggle', updateSpy, true);
-
-let loadToken = 0;
-
-function fetchDept(key) {
-    const src = `faq_${key}.json`;
-    return fetch(src)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => { if (!validate(data)) throw new Error('JSON 格式不正確或沒有內容'); return { key, data }; })
-        .catch(err => { throw { key, src, message: err.message }; });
-}
-
-function loadDept() {
-    const token = ++loadToken;
-    const keys = dept === ALL ? Object.keys(DEPARTMENTS) : [dept];
-
-    $('searchBox').value = '';
-    $('searchBox').disabled = true;
-    $('content').innerHTML = '';
-    $('tocList').innerHTML = '';
-    tocTargets = [];
-    $('noResult').classList.add('hidden');
-    showStatus('載入中…', 'info');
-
-    Promise.allSettled(keys.map(fetchDept)).then(settled => {
-        if (token !== loadToken) return;
-
-        const ok = settled.filter(s => s.status === 'fulfilled').map(s => s.value);
-        const failed = settled.filter(s => s.status === 'rejected').map(s => s.reason);
-
-        if (ok.length === 0) {
-            const f = failed[0];
-            showStatus(`讀取資料失敗。<br>檔案:<code>${escapeHtml(f.src)}</code><br>原因:<code>${escapeHtml(f.message)}</code>`, 'error');
+        m = s.match(/^〔([^〕]+)〕$/);
+        if (m) {
+            if (!cat) startCategory('未分類');
+            sub = m[1].trim();
+            q = null;
+            field = null;
             return;
         }
 
-        render(ok);
-
-        if (failed.length > 0) {
-            const names = failed.map(f => DEPARTMENTS[f.key]).join('、');
-            showStatus(`以下組別目前沒有資料檔，已略過：${escapeHtml(names)}`, 'info');
+        m = s.match(/^問題[：:]\s*(.*)$/);
+        if (m) {
+            if (!cat) {
+                startCategory('未分類');
+                warnings.push(`第 ${lineNo} 行：問題前面沒有【類別】，已放入「未分類」`);
+            }
+            q = { question: m[1], answer: '', sub, line: lineNo };
+            cat.questions.push(q);
+            field = 'question';
+            return;
         }
+
+        m = s.match(/^回答[：:]\s*(.*)$/);
+        if (m) {
+            if (!q) {
+                warnings.push(`第 ${lineNo} 行：「回答」前面沒有「問題」，已略過`);
+                return;
+            }
+            q.answer = m[1];
+            field = 'answer';
+            return;
+        }
+
+        // 其他行：接在目前欄位後面（答案可以多行）
+        if (q && field) {
+            if (field === 'question') {
+                if (!s) return;
+                if (looksLikeAnswerStart(s)) {
+                    q.answer = raw.replace(/\s+$/, '');
+                    field = 'answer';
+                    warnings.push(`第 ${lineNo} 行：「${q.question.slice(0, 20)}」沒有「回答：」，已從這行起視為答案`);
+                } else {
+                    q.question += ' ' + s;
+                }
+            } else {
+                q.answer += '\n' + raw.replace(/\s+$/, '');
+            }
+        } else if (s && cat) {
+            warnings.push(`第 ${lineNo} 行：不屬於任何問題的文字，已略過：${s.slice(0, 30)}`);
+        }
+        // 第一個【類別】之前的行（例如單位名稱）直接略過
     });
+
+    // 整理成編輯器格式
+    let emptyAnswers = 0;
+    let withSub = 0;
+    const data = cats.map((c, ci) => {
+        const n = ci + 1;
+        const seen = new Set();
+        return {
+            id: `${deptCode}_c${n}_${n}`,
+            categoryName: c.name,
+            questions: c.questions.map((item, qi) => {
+                const answer = item.answer.replace(/\n{3,}/g, '\n\n').trim();
+                const question = item.question.trim();
+                if (!answer) {
+                    emptyAnswers++;
+                    warnings.push(`第 ${item.line} 行：「${question.slice(0, 20)}」沒有回答（可能是小標題）`);
+                }
+                const key = item.sub + '|' + question;
+                if (seen.has(key)) warnings.push(`第 ${item.line} 行：同一組內有重複的問題「${question.slice(0, 20)}」`);
+                seen.add(key);
+
+                const out = {
+                    id: `${deptCode}_c${n}_${n}${qi + 1}`,
+                    question,
+                    answer: linkify(answer)
+                };
+                if (item.sub) { out.subCategory = item.sub; withSub++; }
+                return out;
+            })
+        };
+    });
+
+    const questionCount = data.reduce((sum, c) => sum + c.questions.length, 0);
+    return {
+        data,
+        warnings,
+        stats: { categories: data.length, questions: questionCount, withSub, emptyAnswers }
+    };
 }
 
-function switchDept(k) {
-    if (k === dept) return;
-    dept = k;
-    history.pushState({ dept: k }, '', `?dept=${k}`);
-    renderTabs();
-    loadDept();
-}
-
-window.addEventListener('popstate', () => {
-    dept = readDept();
-    renderTabs();
-    loadDept();
-});
-
-renderTabs();
-loadDept();
-</script>
-</body>
-</html>
+if (typeof module !== 'undefined') module.exports = { parseFaqText, decodeTextFile };
