@@ -207,11 +207,53 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function renderAnswer(raw) {
+// 跳脫文字,並把 <a href="https://...">文字</a> 轉成可點的連結
+function linkify(raw) {
     return escapeHtml(raw).replace(
         /&lt;a href=&quot;(https?:\/\/(?:[^&\s]|&amp;)+)&quot;(?:(?!&gt;).)*?&gt;(.*?)&lt;\/a&gt;/g,
         (m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline font-medium">${text}</a>`
     );
+}
+
+const SEP = /[｜|]/;
+
+// 連續兩行(含)以上用「｜」分欄 → 表格,第一行為表頭
+function buildTable(rows) {
+    const cells = rows.map(l => l.split(SEP).map(c => c.trim()));
+    const cols = Math.max(...cells.map(r => r.length));
+    const pad = (r) => { while (r.length < cols) r.push(''); return r; };
+    const th = 'bg-[#003366] text-white text-left font-bold px-3 py-2 border border-gray-200 align-top';
+    const tdFirst = 'bg-gray-50 font-bold text-gray-800 px-3 py-2 border border-gray-200 align-top whitespace-nowrap';
+    const td = 'px-3 py-2 border border-gray-200 align-top';
+
+    const head = pad(cells[0]).map(c => `<th class="${th}">${linkify(c)}</th>`).join('');
+    const body = cells.slice(1).map(r =>
+        '<tr>' + pad(r).map((c, i) => `<td class="${i === 0 ? tdFirst : td}">${linkify(c)}</td>`).join('') + '</tr>'
+    ).join('');
+
+    return `<div class="overflow-x-auto my-2"><table class="w-full text-sm border-collapse whitespace-normal"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function renderAnswer(raw) {
+    const lines = String(raw).split('\n');
+    const parts = [];
+    let text = [];
+    let rows = [];
+
+    const flushText = () => { if (text.length) { parts.push(linkify(text.join('\n'))); text = []; } };
+    const flushRows = () => {
+        if (rows.length >= 2) { flushText(); parts.push(buildTable(rows)); }
+        else rows.forEach(l => text.push(l));   // 只有單行時當一般文字
+        rows = [];
+    };
+
+    lines.forEach(line => {
+        if (line.trim() && SEP.test(line)) rows.push(line);
+        else { flushRows(); text.push(line); }
+    });
+    flushRows();
+    flushText();
+    return parts.join('');
 }
 
 function showStatus(html, kind) {
