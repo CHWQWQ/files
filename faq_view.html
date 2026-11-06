@@ -158,6 +158,7 @@ function showStatus(html, kind) {
 }
 
 function renderTabs() {
+    const tabs = [[ALL, '全部'], ...Object.entries(DEPARTMENTS)];
     $('topTabs').innerHTML = Object.entries(DEPARTMENTS).map(([k, v]) => {
         const isActive = k === dept;
         const styleClass = isActive ? 'tab-active' : 'tab-inactive';
