@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ編輯器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- 浮動標題欄 -->
+        <div class="floating-header rounded-t-3xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <svg class="icon-lg text-white" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">
+                            FAQ編輯器
+                        </h1>
+                        <div id="departmentInfo">
+                            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded font-mono">shsd</span>
+                                <span>住宿服務組</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2">
+                        <label for="departmentSelect" class="text-sm font-medium text-gray-700">選擇組別:</label>
+                        <select id="departmentSelect" class="input-modern text-sm py-2 px-3">
+                            <option value="shsd">住宿服務組</option>
+                            <option value="isrc">原民中心</option>
+                            <option value="dsa">學務長室</option>
+                            <option value="saad">就學服務組</option>
+                            <option value="clss">生輔教中心</option>
+                            <option value="hd">衛生保健組</option>
+                            <option value="esd">課外活動組</option>
+                            <option value="scd">諮商輔導組</option>
+                            <option value="hesp">高教深耕</option>
+                        </select>
+                    </div>
+                    
+                    <button id="toggleModeBtn" class="btn-modern btn-primary flex items-center space-x-2 px-6 py-3 font-medium">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span>預覽模式</span>
+                    </button>
+                    
+                    <button id="addCategoryBtn" class="btn-modern btn-success flex items-center space-x-2 px-6 py-3 font-medium">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>新增類別</span>
+                    </button>
+                    
+                    <button id="exportBtn" class="btn-modern btn-info flex items-center space-x-2 px-6 py-3 font-medium">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>匯出</span>
+                    </button>
+                    
+                    <input type="file" id="importInput" accept=".json" style="display: none;">
+                    <button id="importBtn" class="btn-modern btn-warning flex items-center space-x-2 px-6 py-3 font-medium">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span>匯入</span>
+                    </button>
+
+                    <input type="file" id="importTxtInput" accept=".txt" style="display: none;">
+                    <button id="importTxtBtn" class="btn-modern flex items-center space-x-2 px-6 py-3 font-medium" title="匯入各單位交來的 txt 原稿">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span>匯入txt</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要內容區域 -->
+        <div class="main-container p-8">
+            <!-- 編輯模式 -->
+            <div id="editMode" class="space-y-8">
+                <div id="emptyState" class="empty-state text-center py-16">
+                    <div class="mb-6">
+                        <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-10 h-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-700 mb-4">開始建立FAQ</h3>
+                    <p class="text-gray-600 mb-4 max-w-md mx-auto">選擇你的組別並開始建立常見問題</p>
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-500 mb-2">當前選擇組別:</p>
+                        <div class="flex justify-center">
+                            <div id="currentDeptDisplay" class="flex items-center space-x-2 px-4 py-2 bg-blue-50 rounded-lg">
+                                <span class="font-mono text-blue-700">shsd</span>
+                                <span class="text-blue-600">住宿服務組</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-8 max-w-md mx-auto">ID格式將為: <code id="idFormatExample" class="bg-gray-100 px-2 py-1 rounded font-mono text-sm">shsd_c1_1</code></p>
+                    <div class="flex justify-center">
+                        <button id="quickStartBtn" class="btn-modern btn-primary px-8 py-4 text-lg font-medium">
+                            <span>立即開始</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="categoriesContainer"></div>
+            </div>
+
+            <!-- 預覽模式 -->
+            <div id="previewMode" class="card-modern p-8" style="display: none;">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        FAQ 預覽
+                    </h2>
+                    <p class="text-gray-600">這是使用者看到的最終效果</p>
+                </div>
+                <div id="previewContainer">
+                    <div class="empty-state text-center py-16">
+                        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">尚無內容</h3>
+                        <p class="text-gray-500">請先在編輯模式中新增類別和問題</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="parser.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

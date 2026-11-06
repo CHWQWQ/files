@@ -1,0 +1,374 @@
+[
+  {
+    "id": "saad_c1_1",
+    "categoryName": "學保理賠",
+    "questions": [
+      {
+        "id": "saad_c1_11",
+        "question": "理賠期限",
+        "answer": "申請期限為事故日發生兩年內。",
+        "subCategory": "事故發生申請理賠期程"
+      },
+      {
+        "id": "saad_c1_12",
+        "question": "送件方式",
+        "answer": "備妥申請書及理賠申請相關資料，現場繳交或掛號郵寄至各校區衛保組，經承辦人員核章後送交保險公司，不可自行送件給保險公司。",
+        "subCategory": "事故發生申請理賠期程"
+      },
+      {
+        "id": "saad_c1_13",
+        "question": "意外(車禍)",
+        "answer": "",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_14",
+        "question": "住院",
+        "answer": "學生團體保險金申請書、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本、如有報警請盡可能檢附事故三聯單影本。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_15",
+        "question": "未住院",
+        "answer": "學生團體保險金申請書、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本、如有報警請盡可能檢附事故三聯單影本、如有骨折需檢附 X 光片(光碟片)。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_16",
+        "question": "疾病",
+        "answer": "",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_17",
+        "question": "住院",
+        "answer": "學生團體保險金申請書、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_18",
+        "question": "未住院(如感冒、腸胃炎等疾病)",
+        "answer": "由保險公司依據當時保險契約核判理賠事宜。疾病門診不包含在學生團體保險的理賠範圍，所以不能申請。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_19",
+        "question": "意外(如實驗意外/運動受傷/走路跌倒/切割傷/燙傷/其他意外等)",
+        "answer": "",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_110",
+        "question": "住院",
+        "answer": "學生團體保險金申請書、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_111",
+        "question": "未住院",
+        "answer": "學生團體保險金申請書、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本、如有骨折需檢附 X 光片(光碟片)。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_112",
+        "question": "身故",
+        "answer": "學生團體保險金申請書、繼承人聲明同意書，父母親雙方均須簽名與填寫資料；檢附死亡證明書正本一份、除戶戶籍謄本正本一份、全戶戶籍謄本正本一份、診斷證明書正本一份、醫療費用收據正本或副本、父母親雙方身分證正反面影本及存摺影本、事故當學期保費繳費證明影本、如為車禍身故有報警請檢附事故三聯單影本。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_113",
+        "question": "初次罹癌",
+        "answer": "",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_114",
+        "question": "住院或未住院",
+        "answer": "學生團體保險金申請書、病理切片檢查報告、診斷證明書正本、醫療收據正本或副本、事故當學期學雜費繳費收據或就貸學保承貸銀行申請證明影本、學生本人存摺封面影本。",
+        "subCategory": "申請學生團體保險應準備資料"
+      },
+      {
+        "id": "saad_c1_115",
+        "question": "可申請理賠對象",
+        "answer": "本校在學、休學、延修生，並依規定時間內完成學生團體保險費繳交。",
+        "subCategory": "可申請理賠對象"
+      },
+      {
+        "id": "saad_c1_116",
+        "question": "理賠項目與金額",
+        "answer": "<a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2134/722017791.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2134/722017791.pdf</a>",
+        "subCategory": "理賠項目與金額"
+      },
+      {
+        "id": "saad_c1_117",
+        "question": "寒暑假發生事故有保障嗎？",
+        "answer": "各學期保障期間：第一學期(8 月 1 日-1 月 31 日)、第二學期(2 月 1 日-7 月 31 日)。",
+        "subCategory": "寒暑假發生事故有保障嗎？"
+      },
+      {
+        "id": "saad_c1_118",
+        "question": "建工校區",
+        "answer": "日間部：吳汝涓護理師(分機12531；email:juanwu@nskut.edu.tw)。\n　　　進修部：蘇楚喬護理師(分機：12534；email:crony531@nkust.edu.tw)。\n住址：807618 高雄市三民區建工路 415 號衛保組。",
+        "subCategory": "各校區收件聯絡窗口"
+      },
+      {
+        "id": "saad_c1_119",
+        "question": "燕巢校區",
+        "answer": "石佩瑤護理師(分機：18535；email: yau@nkust.edu.tw)。\n住址：824004 高雄市燕巢區深中路 58 號衛保組。",
+        "subCategory": "各校區收件聯絡窗口"
+      },
+      {
+        "id": "saad_c1_120",
+        "question": "楠梓校區",
+        "answer": "日間部：王雪吟護理師(分機22086；email: w236@nkust.edu.tw)。\n進修部：陳盈任護理師(分機22088；email: sharlina@nkust.edu.tw)。\n住址：811213 高雄市楠梓區海專路 142 號衛保組。",
+        "subCategory": "各校區收件聯絡窗口"
+      },
+      {
+        "id": "saad_c1_121",
+        "question": "旗津校區",
+        "answer": "陳婉禎護理師(分機25085；email: jesus25@nkust.edu.tw)。\n住址：805301 高雄市旗津區中洲三路 482 號衛保組。",
+        "subCategory": "各校區收件聯絡窗口"
+      },
+      {
+        "id": "saad_c1_122",
+        "question": "第一校區",
+        "answer": "日間部：張雅惠護理師(分機31251；email: yahui@nkust.edu.tw)。\n進修部：宋翊君護理師(分機31253；email: yjps5420@nkust.edu.tw)。\n住址：824005 高雄市燕巢區大學路 1 號衛保組。",
+        "subCategory": "各校區收件聯絡窗口"
+      }
+    ]
+  },
+  {
+    "id": "saad_c2_2",
+    "categoryName": "物品借用?",
+    "questions": [
+      {
+        "id": "saad_c2_21",
+        "question": "受傷行動不便可借用物品",
+        "answer": "可外借行動輔具(柺杖、輪椅等)。請持學生證或其他有照片證件辦理登記借用，歸還物品時須確保無損壞，若有損壞須照價賠償。",
+        "subCategory": "受傷行動不便可借用物品"
+      },
+      {
+        "id": "saad_c2_22",
+        "question": "舉辦活動可借用物品",
+        "answer": "借用簡易急救箱：於活動前一天，請攜帶學生證或有照片的任何證件至衛保組登記，即可借用。",
+        "subCategory": "舉辦活動可借用物品"
+      },
+      {
+        "id": "saad_c2_23",
+        "question": "實驗室或社團急救箱耗材沒了/過期如何補充",
+        "answer": "請自行準備簡易急救箱到衛保組，將提供簡易外傷處理耗材補充，每學期限一次。",
+        "subCategory": "實驗室或社團急救箱耗材沒了/過期如何補充"
+      }
+    ]
+  },
+  {
+    "id": "saad_c3_3",
+    "categoryName": "保健服務",
+    "questions": [
+      {
+        "id": "saad_c3_31",
+        "question": "上班時間",
+        "answer": "",
+        "subCategory": "身體不舒服或緊急意外受傷怎麼辦"
+      },
+      {
+        "id": "saad_c3_32",
+        "question": "身體不舒服",
+        "answer": "星期一~星期五上班時間可電話通知或自行至衛保組，由護理師現場進行評估處置，住宿生在宿舍裡可請宿舍老師協助，傷病嚴重者協助後續就醫事宜。",
+        "subCategory": "身體不舒服或緊急意外受傷怎麼辦"
+      },
+      {
+        "id": "saad_c3_33",
+        "question": "緊急意外受傷",
+        "answer": "發生緊急意外受傷事件，例如:車禍，請通知校安專線 0800-550-995 及衛保組到現場進行評估處置，受傷嚴重者請同時聯繫 119 協助送醫。",
+        "subCategory": "身體不舒服或緊急意外受傷怎麼辦"
+      },
+      {
+        "id": "saad_c3_34",
+        "question": "非上班時間",
+        "answer": "發生緊急傷病事件，請通知校安專線 0800-550-995 或聯繫 119 協助送醫。",
+        "subCategory": "身體不舒服或緊急意外受傷怎麼辦"
+      },
+      {
+        "id": "saad_c3_35",
+        "question": "去哪間醫療院所就醫有優惠呢",
+        "answer": "<a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/544158134.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/544158134.pdf</a>",
+        "subCategory": "去哪間醫療院所就醫有優惠呢"
+      },
+      {
+        "id": "saad_c3_36",
+        "question": "首次受傷",
+        "answer": "護理師會先做初步外傷處置，視傷口狀況建議就醫。",
+        "subCategory": "受傷可以去哪裡換藥?"
+      },
+      {
+        "id": "saad_c3_37",
+        "question": "常規換藥",
+        "answer": "受傷就醫經醫師診治後，建議可由學校護理師或本人自行換藥，請攜帶醫師開立之外傷處方藥品，就能協助外傷常規換藥。",
+        "subCategory": "受傷可以去哪裡換藥?"
+      },
+      {
+        "id": "saad_c3_38",
+        "question": "身體不舒服，可以到衛保組拿成藥吃嗎？",
+        "answer": "依「藥事法施行細則」第 3 條、「護理人員法」第 24 條法規規定:醫療處方藥物或輔助行為應由醫師處方或指示下執行，本校無醫師駐診，無法提供醫師處方用藥(含口服藥)。",
+        "subCategory": "身體不舒服，可以到衛保組拿成藥吃嗎？"
+      },
+      {
+        "id": "saad_c3_39",
+        "question": "身高體重機、血壓計、身體組成分析儀(體脂機)開放使用時間",
+        "answer": "",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_310",
+        "question": "建工校區",
+        "answer": "位於行政大樓一樓,身高體重計.血壓計使用時間:上班時間皆可使用.身體組成分析儀使用時間:週一至周五14:00-17:30 ,18:00-20:30 (備註:寒暑假使用時間:14:00-16:00)",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_311",
+        "question": "燕巢校區",
+        "answer": "位於行政大樓一樓；使用時間:9：00-12：00、13：00-17：00。",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_312",
+        "question": "楠梓校區",
+        "answer": "位於司令台一樓；使用時間:9：00-11：00、14：00-16：00。",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_313",
+        "question": "旗津校區",
+        "answer": "位於行政大樓一樓；使用時間:9：00-12：00、13：00-17：00。",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_314",
+        "question": "第一校區",
+        "answer": "位於行政大樓一樓；使用時間：9:00-12:00、13:00-17:00",
+        "subCategory": "提供哪些保健設備使用？"
+      },
+      {
+        "id": "saad_c3_315",
+        "question": "哺乳室借用",
+        "answer": "上班時間至衛保組借用即可，提供教職員工生免費使用，不用事前預約。",
+        "subCategory": "哺乳室借用"
+      }
+    ]
+  },
+  {
+    "id": "saad_c4_4",
+    "categoryName": "校園菸害",
+    "questions": [
+      {
+        "id": "saad_c4_41",
+        "question": "校內可以抽菸嗎？",
+        "answer": "依據菸害防制法修法(112年3月22日起施行)第18條第1項第1款規定，各級學校(含大專校院)全面禁止吸菸",
+        "subCategory": "校內可以抽菸嗎？"
+      },
+      {
+        "id": "saad_c4_42",
+        "question": "通知各校區生活輔導組校安人員(校園菸害巡查)",
+        "answer": "生活輔導組各校區分機：\n      建工校區：13402、13407-13410\n      燕巢校區：18652-18655\n      楠梓校區：55212-55216\n         旗津校區：25047、25087-25088\n      第一校區：31903、31909-31912",
+        "subCategory": "校內有人違規吸菸要怎麼檢舉？"
+      },
+      {
+        "id": "saad_c4_43",
+        "question": "撥打菸害申訴服務中心",
+        "answer": "免付費專線 0800-531-531，或高雄市衛生局菸害防制專線：07-7230805、07- 7230825。",
+        "subCategory": "校內有人違規吸菸要怎麼檢舉？"
+      },
+      {
+        "id": "saad_c4_44",
+        "question": "在校內抽菸被抓到有什麼處分？",
+        "answer": "經衛生局偕同警察入校稽查取締者，將被開罰新台幣 2000 元至 1 萬元。並須至衛保組接受戒菸教育。",
+        "subCategory": "在校內抽菸被抓到有什麼處分？"
+      },
+      {
+        "id": "saad_c4_45",
+        "question": "國民健康署戒菸治療管理窗口",
+        "answer": "電話：02-23510120 轉 14 或 17。",
+        "subCategory": "戒菸的資源有哪些？"
+      },
+      {
+        "id": "saad_c4_46",
+        "question": "免費戒菸諮詢專線",
+        "answer": "0800-636363(週一至週六上午 9 時-下午 9 時)，亦可洽詢各縣市衛生局（所）",
+        "subCategory": "戒菸的資源有哪些？"
+      },
+      {
+        "id": "saad_c4_47",
+        "question": "提供戒菸治療服務機構",
+        "answer": "目前全國有約 3,500 家的合約醫事機構或藥局可以提供戒菸治療服務，查詢網址: <a href=\"https://ttc.hpa.gov.tw/Web/Agency.aspx\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://ttc.hpa.gov.tw/Web/Agency.aspx</a>。",
+        "subCategory": "戒菸的資源有哪些？"
+      },
+      {
+        "id": "saad_c4_48",
+        "question": "利用戒菸服務需要額外付費嗎？",
+        "answer": "戒菸服務利用者，除各醫事機構所訂掛號費外，無需繳交其他費用。",
+        "subCategory": "戒菸的資源有哪些？"
+      }
+    ]
+  },
+  {
+    "id": "saad_c5_5",
+    "categoryName": "新生健檢",
+    "questions": [
+      {
+        "id": "saad_c5_51",
+        "question": "每位同學都需參加嗎",
+        "answer": "是的，依據學校衛生法第 8 條、學校健康檢查實施辦法第 4 條，為維護學生健康，早期發現健康問題、早期治療，並預防傳染病，所有學制新生(含境外、轉、復學生)都需參加。",
+        "subCategory": "每位同學都需參加嗎"
+      },
+      {
+        "id": "saad_c5_52",
+        "question": "新生健檢之注意事項",
+        "answer": "<a href=\"https://osa.nkust.edu.tw/p/406-1154-90590,r1828.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90590,r1828.php?Lang=zh-tw</a>",
+        "subCategory": "新生健檢之注意事項"
+      },
+      {
+        "id": "saad_c5_53",
+        "question": "校內健檢時間",
+        "answer": "請依校區、系所確認健檢時間。\n<a href=\"https://osa.nkust.edu.tw/p/406-1154-90590,r1828.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90590,r1828.php?Lang=zh-tw</a>",
+        "subCategory": "校內健檢時間"
+      },
+      {
+        "id": "saad_c5_54",
+        "question": "我有做公司健檢/勞工健檢/兵役健檢，還要再做新生健檢嗎",
+        "answer": "接受學生持開學前三個月內有效期的勞工健檢報告正(副)本(不接受影本)，需符合教育部規定之健檢項目，並填妥本校學生健康資料卡，於開學二週內交至衛生保健組。",
+        "subCategory": "我有做公司健檢/勞工健檢/兵役健檢，還要再做新生健檢嗎"
+      },
+      {
+        "id": "saad_c5_55",
+        "question": "建工校區",
+        "answer": "日間-蘇瓊如護理師(分機：12532；sunflower@nkust.edu.tw)\n　　　夜間-蘇楚喬護理師(分機:12534；crony531@nkust.edu.tw)\n住址：807618 高雄市三民區建工路415號衛保組",
+        "subCategory": "有任何問題，如何諮詢"
+      },
+      {
+        "id": "saad_c5_56",
+        "question": "燕巢校區",
+        "answer": "石佩瑤護理師(分機：18535; email: yau@nkust.edu.tw)\n住址：824004 高雄市燕巢區深中路58號衛保組",
+        "subCategory": "有任何問題，如何諮詢"
+      },
+      {
+        "id": "saad_c5_57",
+        "question": "楠梓校區",
+        "answer": "日間部：王雪吟護理師(分機：22086；email: w236@nkust.edu.tw)\n夜間部：陳盈任護理師(分機：22088；email: sharlina@nkust.edu.tw)\n住址：811213 高雄市楠梓區海專路142號衛保組",
+        "subCategory": "有任何問題，如何諮詢"
+      },
+      {
+        "id": "saad_c5_58",
+        "question": "旗津校區",
+        "answer": "陳婉禎護理師(分機：25085；email: jesus25@nkust.edu.tw)\n住址：805301 高雄市旗津區中洲三路482號衛保組。",
+        "subCategory": "有任何問題，如何諮詢"
+      },
+      {
+        "id": "saad_c5_59",
+        "question": "第一校區",
+        "answer": "日間部：張雅惠護理師(分機：31251；email: yahui@nkust.edu.tw)\n夜間部：宋翊君護理師(分機：31253；email: yjps5420@nkust.edu.tw)\n住址：824005 高雄市燕巢區大學路1號衛保組",
+        "subCategory": "有任何問題，如何諮詢"
+      }
+    ]
+  }
+]
