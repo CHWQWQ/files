@@ -9,7 +9,7 @@
     <style>
         /* 高科大專屬配色與截圖配色 */
         :root {
-            --nkust-blue:#003366; 
+            --nkust-blue: #003366; 
             --tab-blue: #003366; 
            
         }
@@ -181,7 +181,7 @@
                 }
                 return head + `
                 <div class="q-wrapper">
-                    <details id="${escapeHtml(q.id)}" class="q group">
+                    <details id="${escapeHtml(q.id)}" class="q group" open>
                         <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
                             <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">Q: ${escapeHtml(q.question)}</span>
                             <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -222,7 +222,7 @@
                 const d = wrap.querySelector('details');
                 const match = !kw || d.textContent.toLowerCase().includes(kw);
                 wrap.classList.toggle('hidden', !match);
-                if (kw && match) d.open = true; else if (!kw) d.open = false;
+                if (kw && match) d.open = true;
                 if (match) catHits++;
             });
             cat.querySelectorAll('.label').forEach(el => el.classList.toggle('hidden', !!kw));
