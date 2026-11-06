@@ -58,14 +58,32 @@
 <body class="min-h-screen bg-gray-50 font-sans">
     
     <!-- 頂部 Header -->
-    <!-- <header class="nkust-bg-blue text-white shadow-md relative z-10">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="text-2xl font-bold tracking-wider">國立高雄科技大學</div>
-                <div class="text-xl border-l-2 border-white/30 pl-3 ml-2">學生事務處</div>
+    <div class="bg-[#00264d] text-white text-xs">
+    <div class="max-w-6xl mx-auto px-4 py-1.5 flex justify-end gap-5">
+        <a href="https://www.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學校首頁</a>
+        <a href="https://stu.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學務處官網</a>
+        <a href="#" class="hover:underline">English</a>
+    </div>
+</div>
+
+<!-- 主標頭 -->
+<header class="nkust-bg-blue text-white shadow-md relative z-10">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <a href="https://stu.nkust.edu.tw" class="flex items-center gap-4">
+            <!-- 校徽位置:有圖檔就換成 <img src="logo.png" class="h-12" alt="校徽"> -->
+            <div class="w-12 h-12 rounded-full bg-white/15 border border-white/40 flex items-center justify-center text-xl font-bold">高科</div>
+            <div>
+                <div class="text-2xl font-bold tracking-wider leading-tight">國立高雄科技大學 <span class="font-normal border-l-2 border-white/30 pl-3 ml-2">學生事務處</span></div>
+                <div class="text-xs text-white/70 tracking-wide">National Kaohsiung University of Science and Technology</div>
             </div>
-        </div>
-    </header> -->
+        </a>
+        <nav class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm">
+            <a href="https://stu.nkust.edu.tw" class="hover:underline">首頁</a>
+            <a href="index.html" class="hover:underline">常見問題</a>
+            <a href="https://stu.nkust.edu.tw" class="hover:underline">各組業務</a>
+        </nav>
+    </div>
+</header>
 
     <div class="max-w-6xl mx-auto px-4 py-8">
         
@@ -220,5 +238,30 @@
             showStatus(`系統正在建置中。<br>讀不到對應的資料檔 <code class="bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-800">${escapeHtml(src)}</code>。<br>（請確認對應的 JSON 檔案已上傳至專案資料夾中）`, 'error');
         });
     </script>
+    <footer class="bg-[#00264d] text-white mt-12 w-full flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-3 text-sm leading-relaxed">
+        <div>
+            <div class="text-lg font-bold mb-2">國立高雄科技大學 學生事務處</div>
+            <div class="text-white/70">Office of Student Affairs</div>
+            <div class="mt-3">總機:(07) 381-4526</div>
+        </div>
+        <div>
+            <div class="font-bold mb-2 border-b border-white/20 pb-1">校區地址</div>
+            <div>第一校區:高雄市燕巢區大學路 1 號</div>
+            <div>建工校區:高雄市三民區建工路 415 號</div>
+            <!-- 楠梓、燕巢、旗津校區地址請對照官網補上 -->
+        </div>
+        <div>
+            <div class="font-bold mb-2 border-b border-white/20 pb-1">相關連結</div>
+            <ul class="space-y-1">
+                <li><a class="hover:underline" href="https://www.nkust.edu.tw" target="_blank" rel="noopener">學校首頁</a></li>
+                <li><a class="hover:underline" href="https://stu.nkust.edu.tw" target="_blank" rel="noopener">學務處官網</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="bg-black/25 text-center text-xs text-white/70 py-3">
+        Copyright © 國立高雄科技大學 學生事務處 All Rights Reserved.
+    </div>
+</footer>
 </body>
 </html>
