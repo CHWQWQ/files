@@ -116,18 +116,18 @@
 
     <script>
     // 主題分類對應
-    const DEPARTMENTS = {
-        'shsd': '住宿服務組',
-        'isrc': '原民中心',
-        'dsa': '學務長室',
-        'saad': '就學服務組',
-        'clss': '生輔教中心',
-        'hd': '衛生保健組',
-        'esd': '課外活動組',
-        'scd': '諮商輔導組',
-        'hesp': '高教深耕'
+    // const DEPARTMENTS = {
+    //     'shsd': '住宿服務組',
+    //     'isrc': '原民中心',
+    //     'dsa': '學務長室',
+    //     'saad': '就學服務組',
+    //     'clss': '生輔教中心',
+    //     'hd': '衛生保健組',
+    //     'esd': '課外活動組',
+    //     'scd': '諮商輔導組',
+    //     'hesp': '高教深耕'
         
-    };
+    // };
     
     const $ = (id) => document.getElementById(id);
     const params = new URLSearchParams(location.search);
@@ -161,7 +161,7 @@
         }).join('');
 
         document.querySelectorAll('.dept-tab').forEach(btn => {
-            btn.addEventListener('click', (e) => { location.search = `?dept=${e.target.value}`; });
+            btn.addEventListener('click', (e) => switchDept(e.currentTarget.value));
         });
     }
 
@@ -173,7 +173,7 @@
             const items = cat.questions.map(q => {
                 let head = '';
                 if (q.subCategory && q.subCategory !== lastSub) {
-                    head = `<div class="pt-4 pb-2"><span class="text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(q.subCategory)}</span></div>`;
+                    head = `<div class="sub-head  pt-4 pb-2"><span class="text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(q.subCategory)}</span></div>`;
                 }
                 lastSub = q.subCategory || null;
                 if (!q.answer.trim()) {
@@ -181,7 +181,7 @@
                 }
                 return head + `
                 <div class="q-wrapper">
-                    <details id="${escapeHtml(q.id)}" class="q group" open>
+                    <details id="${escapeHtml(q.id)}" class="q group">
                         <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
                             <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">Q: ${escapeHtml(q.question)}</span>
                             <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -213,33 +213,73 @@
         render(data);
     }
 
-    $('searchBox').addEventListener('input', (e) => {
-        const kw = e.target.value.trim().toLowerCase();
-        let hits = 0;
-        document.querySelectorAll('#content .cat').forEach(cat => {
-            let catHits = 0;
-            cat.querySelectorAll('.q-wrapper').forEach(wrap => {
-                const d = wrap.querySelector('details');
-                const match = !kw || d.textContent.toLowerCase().includes(kw);
-                wrap.classList.toggle('hidden', !match);
-                if (kw && match) d.open = true;
-                if (match) catHits++;
-            });
-            cat.querySelectorAll('.label').forEach(el => el.classList.toggle('hidden', !!kw));
-            cat.classList.toggle('hidden', !!kw && catHits === 0);
-            hits += catHits;
+$('searchBox').addEventListener('input', (e) => {
+    const kw = e.target.value.trim().toLowerCase();
+    let hits = 0;
+
+    document.querySelectorAll('#content .cat').forEach(cat => {
+        let catHits = 0;
+
+        // 1. 先篩選問題(只顯示或隱藏,不改展開狀態)
+        cat.querySelectorAll('.q-wrapper').forEach(wrap => {
+            const d = wrap.querySelector('details');
+            const match = !kw || d.textContent.toLowerCase().includes(kw);
+            wrap.classList.toggle('hidden', !match);
+            if (match) catHits++;
         });
-        $('noResult').classList.toggle('hidden', !kw || hits > 0);
+
+        // 2. 標題:底下沒有符合的問題就隱藏
+        const nodes = Array.from(cat.querySelector('div').children);
+        nodes.forEach((el, i) => {
+            const isSub = el.classList.contains('sub-head');
+            const isLabel = el.classList.contains('label');
+            if (!isSub && !isLabel) return;
+
+            let visible = false;
+            for (let j = i + 1; j < nodes.length; j++) {
+                const n = nodes[j];
+                if (n.classList.contains('sub-head')) break;
+                if (isLabel && n.classList.contains('label')) break;
+                if (n.classList.contains('q-wrapper') && !n.classList.contains('hidden')) { visible = true; break; }
+            }
+            el.classList.toggle('hidden', !!kw && !visible);
+        });
+
+        cat.classList.toggle('hidden', !!kw && catHits === 0);
+        hits += catHits;
     });
 
-    renderTabs();
+    $('noResult').classList.toggle('hidden', !kw || hits > 0);
+});
+    let loadToken = 0;
 
-    fetch(src)
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(load)
-        .catch(() => {
-            showStatus(`系統正在建置中。<br>讀不到對應的資料檔 <code class="bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-800">${escapeHtml(src)}</code>。<br>（請確認對應的 JSON 檔案已上傳至專案資料夾中）`, 'error');
-        });
+    function loadDept() {
+        const token = ++loadToken;
+        const src = new URLSearchParams(location.search).get('src') || `faq_${dept}.json`;
+
+        $('searchBox').value = '';
+        $('searchBox').disabled = true;
+        $('content').innerHTML = '';
+        $('noResult').classList.add('hidden');
+        showStatus('載入中…', 'info');
+
+        fetch(src)
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(data => { if (token === loadToken) load(data); })
+            .catch(err => {
+                if (token !== loadToken) return;
+                console.error(err);
+                showStatus(`讀取資料失敗。<br>檔案:<code>${escapeHtml(src)}</code><br>原因:<code>${escapeHtml(err.message)}</code>`, 'error');
+            });
+    }
+
+    function switchDept(k) {
+        if (k === dept) return;
+        dept = k;
+        history.pushState({ dept: k }, '', `?dept=${k}`);
+        renderTabs();
+        loadDept();
+    }
     </script>
     <footer class="bg-[#00264d] text-white mt-12 w-full flex-1">
     <div class="max-w-6xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-3 text-sm leading-relaxed">
