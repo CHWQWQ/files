@@ -27,6 +27,18 @@
         .q-wrapper { border-bottom: 1px solid #e5e7eb; }
         .q-wrapper:last-child { border-bottom: none; }
 
+        /* 類別標題(灰色膠囊,可收合) */
+        details.cat > summary {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 26px; border-radius: 9999px;
+            background-color: #efefef; color: #333;
+            font-size: 1.05rem; font-weight: 700;
+        }
+        details.cat[open] > summary { background-color: #efefef; }
+        details.cat > summary::before { content: "▶"; font-size: .7rem; color: #555; }
+        details.cat[open] > summary::before { content: "▼"; }
+        details.cat > summary::after { content: ""; flex: 1; height: 1px; background-color: #cfcfcf; }
+
         /* 橫向標籤樣式 */
         .tab-pill {
             padding: 10px 20px;
@@ -118,8 +130,6 @@
     <script>
 const DEPARTMENTS = {
     'shsd': '住宿服務組',
-    'isrc': '原民中心',
-    'dsa': '學務長室',
     'saad': '就學服務組',
     'clss': '生輔教中心',
     'hd': '衛生保健組',
@@ -166,7 +176,7 @@ function renderTabs() {
 }
 
 function renderCats(data) {
-    return data.map(cat => {
+    return data.map((cat, catIndex) => {
         let lastSub = null;
         const items = cat.questions.map(q => {
             let head = '';
@@ -189,7 +199,11 @@ function renderCats(data) {
             </div>`;
         }).join('');
 
-        return `<section id="cat-${escapeHtml(cat.id)}" class="cat mb-2"><div class="">${items}</div></section>`;
+        // 類別標題(categoryName)放在 summary;預設只展開每個單位的第一個類別
+        return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2" data-first="${catIndex === 0 ? '1' : '0'}" ${catIndex === 0 ? 'open' : ''}>
+            <summary><span>${escapeHtml(cat.categoryName)}</span></summary>
+            <div class="pt-2">${items}</div>
+        </details>`;
     }).join('');
 }
 
@@ -206,7 +220,12 @@ function render(results) {
     $('searchBox').disabled = false;
     $('status').classList.add('hidden');
     const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
-    if (target && target.tagName === 'DETAILS') { target.open = true; target.scrollIntoView(); }
+    if (target && target.tagName === 'DETAILS') {
+        const parentCat = target.closest('details.cat');
+        if (parentCat) parentCat.open = true;
+        target.open = true;
+        target.scrollIntoView();
+    }
 }
 
 function validate(data) {
@@ -230,6 +249,10 @@ $('searchBox').addEventListener('input', (e) => {
         });
 
         cat.classList.toggle('hidden', !!kw && catHits === 0);
+        // 搜尋時:有結果的類別自動展開;清空搜尋後恢復成「只展開第一個類別」
+        cat.open = kw ? catHits > 0 : cat.dataset.first === '1';
+        // 沒有答案的小標題在搜尋時一律隱藏,避免單獨留在畫面上
+        cat.querySelectorAll('.label').forEach(l => l.classList.toggle('hidden', !!kw));
         hits += catHits;
     });
 
