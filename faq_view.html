@@ -35,8 +35,35 @@
             font-size: 1.05rem; font-weight: 700;
         }
         details.cat[open] > summary { background-color: #efefef; }
-        details.cat > summary::before { content: "▶"; font-size: .7rem; color: #555; }
-        details.cat[open] > summary::before { content: "▼"; }
+        /* 箭頭用 CSS 畫出來(不用 ▶ 文字,避免被系統換成藍色表情符號) */
+        details.cat > summary::before {
+            content: "";
+            border-left: 8px solid #555;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            transition: transform .15s;
+        }
+        details.cat[open] > summary::before { transform: rotate(90deg); }
+
+        /* 分組標題(藍底白字,可收合;和類別一樣把底下的問題包起來) */
+        details.grp { margin: 14px 0 4px; }
+        details.grp > summary { display: flex; align-items: center; gap: 12px; }
+        details.grp[open] > summary { background-color: transparent; }
+        details.grp > summary .grp-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 18px; border-radius: 9999px;
+            background-color: #425b8f; color: #fff;
+            font-size: .9rem; font-weight: 700;
+        }
+        details.grp > summary .grp-pill::before {
+            content: "";
+            border-left: 7px solid #fff;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            transition: transform .15s;
+        }
+        details.grp[open] > summary .grp-pill::before { transform: rotate(90deg); }
+        details.grp > summary .grp-line { flex: 1; height: 1px; background-color: #c9d3e6; }
         details.cat > summary::after { content: ""; flex: 1; height: 1px; background-color: #cfcfcf; }
 
         /* 橫向標籤樣式 */
@@ -175,34 +202,74 @@ function renderTabs() {
     });
 }
 
+// 舊格式相容：舊檔案若是「每題有 subCategory 欄位」或「用〔文字〕當標題的一筆資料」，自動轉成 類別 → 分組 → 問題
+function upgradeToGroups(data) {
+    const isHeading = q => /^〔[^〕]+〕$/.test(q.question.trim()) && !q.answer.trim();
+    data.forEach(cat => {
+        if (!cat.questions.some(q => q.subCategory || isHeading(q))) return;
+        const direct = [];
+        const groups = cat.groups ? cat.groups.slice() : [];
+        let current = null;
+        let fromHeading = false;
+        cat.questions.forEach(q => {
+            if (isHeading(q)) {
+                current = { groupName: q.question.trim().slice(1, -1).trim(), questions: [] };
+                groups.push(current);
+                fromHeading = true;
+                return;
+            }
+            const sub = (q.subCategory || '').trim();
+            if (sub) {
+                if (!current || current.groupName !== sub) {
+                    current = { groupName: sub, questions: [] };
+                    groups.push(current);
+                }
+                fromHeading = false;
+                current.questions.push(q);
+            } else if (current && fromHeading) {
+                current.questions.push(q);
+            } else {
+                current = null;
+                direct.push(q);
+            }
+        });
+        cat.questions = direct;
+        cat.groups = groups;
+    });
+    return data;
+}
+
+// 一筆問題：沒有答案的當小標題，其餘是可展開的問答卡片
+function renderItem(q) {
+    if (!q.answer.trim()) {
+        return `<p class="label pt-4 font-bold border-b border-gray-300 text-[#425b8f]" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
+    }
+    return `
+    <div class="q-wrapper">
+        <details id="${escapeHtml(q.id)}" class="q group">
+            <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
+                <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">${escapeHtml(q.question)}</span>
+                <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="ans pb-5 pt-1 pl-7 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
+        </details>
+    </div>`;
+}
+
 function renderCats(data) {
     return data.map((cat, catIndex) => {
-        let lastSub = null;
-        const items = cat.questions.map(q => {
-            let head = '';
-            if (q.subCategory && q.subCategory !== lastSub) {
-                head = `<div class="sub-head pt-4 pb-2"><span class="text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(q.subCategory)}</span></div>`;
-            }
-            lastSub = q.subCategory || null;
-            if (!q.answer.trim()) {
-                return head + `<p class="label pt-4 font-bold border-b border-gray-300 text-[#425b8f]" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
-            }
-            return head + `
-            <div class="q-wrapper">
-                <details id="${escapeHtml(q.id)}" class="q group">
-                    <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
-                        <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">${escapeHtml(q.question)}</span>
-                        <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </summary>
-                    <div class="ans pb-5 pt-1 pl-7 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
-                </details>
-            </div>`;
-        }).join('');
+        // 先放沒有分組的問題，再依序放各個分組（分組和類別一樣，是可收合的區塊，把自己的問題包在裡面）
+        const direct = cat.questions.map(renderItem).join('');
+        const groups = (cat.groups || []).map(g => `
+            <details class="grp" open>
+                <summary><span class="grp-pill">${escapeHtml(g.groupName)}</span><span class="grp-line"></span></summary>
+                <div>${g.questions.map(renderItem).join('')}</div>
+            </details>`).join('');
 
         // 類別標題(categoryName)放在 summary;預設只展開每個單位的第一個類別
         return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2" data-first="${catIndex === 0 ? '1' : '0'}" ${catIndex === 0 ? 'open' : ''}>
             <summary><span>${escapeHtml(cat.categoryName)}</span></summary>
-            <div class="pt-2">${items}</div>
+            <div class="pt-2">${direct}${groups}</div>
         </details>`;
     }).join('');
 }
@@ -223,15 +290,19 @@ function render(results) {
     if (target && target.tagName === 'DETAILS') {
         const parentCat = target.closest('details.cat');
         if (parentCat) parentCat.open = true;
+        const parentGrp = target.closest('details.grp');
+        if (parentGrp) parentGrp.open = true;
         target.open = true;
         target.scrollIntoView();
     }
 }
 
 function validate(data) {
+    const validQuestion = q => q && typeof q.id === 'string' && typeof q.question === 'string' && typeof q.answer === 'string';
+    const validGroup = g => g && typeof g.groupName === 'string' && Array.isArray(g.questions) && g.questions.every(validQuestion);
     return Array.isArray(data) && data.length > 0 && data.every(c => c && typeof c.id === 'string' && typeof c.categoryName === 'string'
-        && Array.isArray(c.questions) && c.questions.every(q => q && typeof q.id === 'string'
-            && typeof q.question === 'string' && typeof q.answer === 'string'));
+        && Array.isArray(c.questions) && c.questions.every(validQuestion)
+        && (c.groups === undefined || (Array.isArray(c.groups) && c.groups.every(validGroup))));
 }
 
 $('searchBox').addEventListener('input', (e) => {
@@ -246,6 +317,13 @@ $('searchBox').addEventListener('input', (e) => {
             const match = !kw || d.textContent.toLowerCase().includes(kw);
             wrap.classList.toggle('hidden', !match);
             if (match) catHits++;
+        });
+
+        // 分組:沒有符合的問題就隱藏;搜尋時有結果的自動展開,清空後恢復展開
+        cat.querySelectorAll('.grp').forEach(g => {
+            const gHits = [...g.querySelectorAll('.q-wrapper')].filter(w => !w.classList.contains('hidden')).length;
+            g.classList.toggle('hidden', !!kw && gHits === 0);
+            g.open = kw ? gHits > 0 : true;
         });
 
         cat.classList.toggle('hidden', !!kw && catHits === 0);
@@ -270,7 +348,7 @@ function fetchDept(key) {
     const src = `faq_${key}.json`;
     return fetch(src)
         .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => { if (!validate(data)) throw new Error('JSON 格式不正確'); return { key, data }; })
+        .then(data => { if (!validate(data)) throw new Error('JSON 格式不正確'); return { key, data: upgradeToGroups(data) }; })
         .catch(err => { throw { key, src, message: err.message }; });
 }
 
