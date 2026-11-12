@@ -15,8 +15,6 @@ function convertUrlsToLinks(text) {
 // 組別對應表
 const departments = {
     'shsd': '住宿服務組',
-    'isrc': '原民中心',
-    'dsa': '學務長室',
     'saad': '就學服務組',
     'clss': '生輔教中心',
     'hd': '衛生保健組',
@@ -31,13 +29,105 @@ let expandedCategories = {};
 let expandedQuestions = {};
 let editingCategory = null;
 let editingQuestion = null;
+let editingGroup = null;      // 正在編輯名稱的分組 id
+let expandedGroups = {};       // 分組是否展開（沒設定過 = 展開）
 let showPreview = false;
 let currentDepartment = 'shsd'; // 預設為住宿服務組
 
 // ===== 資料檢查與自動暫存 =====
 const STORAGE_KEY = 'faqEditor_v1';
 
-// HTML 跳脫（用於顯示使用者輸入的子類別）
+// ===== 資料結構：類別 → 分組 → 問題 =====
+// 類別 { id, categoryName,
+//        questions: [沒有放進分組的問題],
+//        groups: [ { id, groupName, questions: [...] } ]   ← 例如「新生」「舊生」「校外人士」，沒有分組就不會有這一項 }
+
+// 舊格式用：問題整句是〔文字〕、答案空白 = 舊的「分組標題」
+function isGroupHeading(q) {
+    return /^〔[^〕]+〕$/.test((q.question || '').trim()) && !(q.answer || '').trim();
+}
+
+// 這個類別底下所有的問題（直屬的 + 各分組裡的）
+function getAllQuestions(cat) {
+    const all = cat.questions.slice();
+    (cat.groups || []).forEach(g => all.push(...g.questions));
+    return all;
+}
+
+// 用問題 id 找出它在哪裡：回傳 { cat, group(沒有分組時是 null), list(它所在的陣列), index }
+function findQuestion(questionId) {
+    for (const cat of faqData) {
+        let index = cat.questions.findIndex(q => q.id === questionId);
+        if (index !== -1) return { cat, group: null, list: cat.questions, index };
+        for (const group of (cat.groups || [])) {
+            index = group.questions.findIndex(q => q.id === questionId);
+            if (index !== -1) return { cat, group, list: group.questions, index };
+        }
+    }
+    return null;
+}
+
+// 取得「類別直屬」或「某個分組」的問題陣列（groupId 是空字串 = 類別直屬）
+function getQuestionList(categoryId, groupId) {
+    const cat = faqData.find(c => c.id === categoryId);
+    if (!groupId) return cat.questions;
+    return cat.groups.find(g => g.id === groupId).questions;
+}
+
+// 產生新的分組 ID，例如 shsd_c1_g1
+function makeGroupId(cat) {
+    const deptCode = extractDepartmentCode(cat.id);
+    const catNum = extractCategoryNumber(cat.id);
+    const used = (cat.groups || []).map(g => g.id);
+    let n = 1;
+    while (used.includes(`${deptCode}_c${catNum}_g${n}`)) n++;
+    return `${deptCode}_c${catNum}_g${n}`;
+}
+
+// 分組名稱的顯示：藍底白字
+function groupPillHtml(name) {
+    return `<span class="inline-block text-sm font-bold text-white bg-[#425b8f] px-3 py-1 rounded-full">${escapeHtml(name || '未命名分組')}</span>`;
+}
+
+// 舊格式相容：舊檔案若是「每題有 subCategory 欄位」或「用〔文字〕當標題的一筆資料」，自動轉成 類別→分組→問題
+function upgradeToGroups(data) {
+    data.forEach(cat => {
+        if (!cat.questions.some(q => q.subCategory || isGroupHeading(q))) return;
+        const direct = [];
+        const groups = [];
+        let current = null;
+        let fromHeading = false;
+        cat.questions.forEach(q => {
+            if (isGroupHeading(q)) {
+                current = { id: '', groupName: q.question.trim().slice(1, -1).trim(), questions: [] };
+                groups.push(current);
+                fromHeading = true;
+                return;
+            }
+            const sub = (q.subCategory || '').trim();
+            delete q.subCategory;
+            if (sub) {
+                if (!current || current.groupName !== sub) {
+                    current = { id: '', groupName: sub, questions: [] };
+                    groups.push(current);
+                }
+                fromHeading = false;
+                current.questions.push(q);
+            } else if (current && fromHeading) {
+                current.questions.push(q);
+            } else {
+                current = null;
+                direct.push(q);
+            }
+        });
+        groups.forEach(g => { g.id = makeGroupId({ id: cat.id, groups }); });
+        cat.questions = direct;
+        cat.groups = groups;
+    });
+    return data;
+}
+
+// HTML 跳脫
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -60,16 +150,34 @@ function validateFaqData(data) {
         if (!Array.isArray(cat.questions)) return `${catLabel}的 questions 必須是陣列`;
         if (seenIds.has(cat.id)) return `${catLabel}的 id 重複：${cat.id}`;
         seenIds.add(cat.id);
-        for (let j = 0; j < cat.questions.length; j++) {
-            const q = cat.questions[j];
-            const qLabel = `${catLabel}的第 ${j + 1} 個問題`;
-            if (!q || typeof q !== 'object' || Array.isArray(q)) return `${qLabel}必須是物件`;
-            if (typeof q.id !== 'string' || !q.id) return `${qLabel}缺少 id`;
-            if (typeof q.question !== 'string') return `${qLabel}缺少 question`;
-            if (typeof q.answer !== 'string') return `${qLabel}缺少 answer`;
-            if (q.subCategory !== undefined && typeof q.subCategory !== 'string') return `${qLabel}的 subCategory 必須是文字`;
-            if (seenIds.has(q.id)) return `${qLabel}的 id 重複：${q.id}`;
-            seenIds.add(q.id);
+        if (cat.groups !== undefined && !Array.isArray(cat.groups)) return `${catLabel}的 groups 必須是陣列`;
+
+        // 要檢查的問題清單：類別直屬的 + 每個分組裡的
+        const lists = [{ label: catLabel, questions: cat.questions }];
+        const groups = cat.groups || [];
+        for (let k = 0; k < groups.length; k++) {
+            const g = groups[k];
+            const gLabel = `${catLabel}的第 ${k + 1} 個分組`;
+            if (!g || typeof g !== 'object' || Array.isArray(g)) return `${gLabel}必須是物件`;
+            if (typeof g.id !== 'string' || !g.id) return `${gLabel}缺少 id`;
+            if (typeof g.groupName !== 'string') return `${gLabel}缺少 groupName`;
+            if (!Array.isArray(g.questions)) return `${gLabel}的 questions 必須是陣列`;
+            if (seenIds.has(g.id)) return `${gLabel}的 id 重複：${g.id}`;
+            seenIds.add(g.id);
+            lists.push({ label: gLabel, questions: g.questions });
+        }
+
+        for (const list of lists) {
+            for (let j = 0; j < list.questions.length; j++) {
+                const q = list.questions[j];
+                const qLabel = `${list.label}的第 ${j + 1} 個問題`;
+                if (!q || typeof q !== 'object' || Array.isArray(q)) return `${qLabel}必須是物件`;
+                if (typeof q.id !== 'string' || !q.id) return `${qLabel}缺少 id`;
+                if (typeof q.question !== 'string') return `${qLabel}缺少 question`;
+                if (typeof q.answer !== 'string') return `${qLabel}缺少 answer`;
+                if (seenIds.has(q.id)) return `${qLabel}的 id 重複：${q.id}`;
+                seenIds.add(q.id);
+            }
         }
     }
     return null;
@@ -91,7 +199,7 @@ function loadFromStorage() {
         if (!raw) return false;
         const saved = JSON.parse(raw);
         if (!saved || validateFaqData(saved.data) !== null) return false;
-        faqData = saved.data;
+        faqData = upgradeToGroups(saved.data);
         if (departments[saved.department]) currentDepartment = saved.department;
         return true;
     } catch (e) {
@@ -102,8 +210,9 @@ function loadFromStorage() {
 // 拖拽相關變數
 let draggedElement = null;
 let draggedIndex = -1;
-let draggedType = null; // 'category' 或 'question'
+let draggedType = null; // 'category'、'group' 或 'question'
 let draggedCategoryId = null;
+let draggedGroupId = '';      // 被拖的問題原本在哪個分組（空字串 = 類別直屬）
 
 // DOM 元素
 let editMode, previewMode, toggleModeBtn, addCategoryBtn, exportBtn, importBtn;
@@ -157,7 +266,7 @@ function generateQuestionId(categoryId) {
     const departmentCode = extractDepartmentCode(categoryId);
     const classNumber = extractCategoryNumber(categoryId);
     const category = faqData.find(cat => cat.id === categoryId);
-    const maxQuestionNumber = Math.max(...category.questions.map(q => extractQuestionNumber(q.id)), 0);
+    const maxQuestionNumber = Math.max(...getAllQuestions(category).map(q => extractQuestionNumber(q.id)), 0);
     const newQuestionNumber = maxQuestionNumber + 1;
     return `${departmentCode}_c${classNumber}_${classNumber}${newQuestionNumber}`;
 }
@@ -214,11 +323,13 @@ function enableDragAndDrop() {
     }
     
     // 問題拖拽
-    function handleQuestionDragStart(e, categoryId, questionIndex) {
+    function handleQuestionDragStart(e, categoryId, groupId, questionIndex) {
+        e.stopPropagation();   // 不要讓外層（類別、分組）也當成自己被拖
         draggedElement = e.currentTarget;
         draggedIndex = questionIndex;
         draggedType = 'question';
         draggedCategoryId = categoryId;
+        draggedGroupId = groupId;
         
         e.currentTarget.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
@@ -232,6 +343,7 @@ function enableDragAndDrop() {
     
     function handleQuestionDragOver(e) {
         e.preventDefault();
+        e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
         
         const questionItem = e.currentTarget;
@@ -245,36 +357,76 @@ function enableDragAndDrop() {
         }
     }
     
-    function handleQuestionDrop(e, targetCategoryId, targetQuestionIndex) {
+    function handleQuestionDrop(e, targetCategoryId, targetGroupId, targetQuestionIndex) {
         e.preventDefault();
-        
+        e.stopPropagation();
+
         if (draggedType === 'question') {
-            const sourceCategoryIndex = faqData.findIndex(cat => cat.id === draggedCategoryId);
-            const targetCategoryIndex = faqData.findIndex(cat => cat.id === targetCategoryId);
-            
-            if (sourceCategoryIndex !== -1 && targetCategoryIndex !== -1) {
-                const draggedQuestion = faqData[sourceCategoryIndex].questions[draggedIndex];
-                
-                // 從原位置移除
-                faqData[sourceCategoryIndex].questions.splice(draggedIndex, 1);
-                
-                // 計算新位置
-                let newIndex = targetQuestionIndex;
-                if (draggedCategoryId === targetCategoryId && draggedIndex < targetQuestionIndex) {
-                    newIndex = targetQuestionIndex - 1;
-                }
-                
-                // 插入到新位置
-                faqData[targetCategoryIndex].questions.splice(newIndex, 0, draggedQuestion);
-                
-                renderEditMode();
-                showNotification('問題順序已更新', 'success');
+            const sourceList = getQuestionList(draggedCategoryId, draggedGroupId);
+            const targetList = getQuestionList(targetCategoryId, targetGroupId);
+            const draggedQuestion = sourceList[draggedIndex];
+
+            // 從原位置移除
+            sourceList.splice(draggedIndex, 1);
+
+            // 計算新位置（同一串裡往下拖，移除後位置會少一格）
+            let newIndex = targetQuestionIndex;
+            if (sourceList === targetList && draggedIndex < targetQuestionIndex) {
+                newIndex = targetQuestionIndex - 1;
             }
+
+            // 插入到新位置（可以拖到別的分組、別的類別）
+            targetList.splice(newIndex, 0, draggedQuestion);
+
+            renderEditMode();
+            showNotification('問題順序已更新', 'success');
         }
-        
+
         clearDragStyles();
     }
-    
+
+    // 分組拖拽（只能在同一個類別裡調整順序）
+    function handleGroupDragStart(e, categoryId, groupIndex) {
+        e.stopPropagation();
+        draggedElement = e.currentTarget;
+        draggedIndex = groupIndex;
+        draggedType = 'group';
+        draggedCategoryId = categoryId;
+
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
+    }
+
+    function handleGroupDragOver(e) {
+        if (draggedType !== 'group') return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+
+        const header = e.currentTarget;
+        const rect = header.getBoundingClientRect();
+        showSortIndicator(header, e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom');
+    }
+
+    function handleGroupDrop(e, targetCategoryId, targetIndex) {
+        if (draggedType !== 'group') return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (draggedCategoryId === targetCategoryId && draggedIndex !== targetIndex) {
+            const cat = faqData.find(c => c.id === targetCategoryId);
+            const [movedGroup] = cat.groups.splice(draggedIndex, 1);
+            const newIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+            cat.groups.splice(newIndex, 0, movedGroup);
+
+            renderEditMode();
+            showNotification('分組順序已更新', 'success');
+        }
+
+        clearDragStyles();
+    }
+
     // 輔助函數
     function showSortIndicator(element, position) {
         clearDragStyles();
@@ -298,6 +450,9 @@ function enableDragAndDrop() {
     window.handleQuestionDragEnd = handleQuestionDragEnd;
     window.handleQuestionDragOver = handleQuestionDragOver;
     window.handleQuestionDrop = handleQuestionDrop;
+    window.handleGroupDragStart = handleGroupDragStart;
+    window.handleGroupDragOver = handleGroupDragOver;
+    window.handleGroupDrop = handleGroupDrop;
 }
 
 // 更新部門資訊顯示
@@ -342,19 +497,31 @@ function addCategory() {
     renderEditMode();
 }
 
-// 新增問題
-function addQuestion(categoryId) {
+// 新增問題（groupId 空字串 = 直接放在類別底下；有 groupId = 放進那個分組）
+function addQuestion(categoryId, groupId = '') {
     const newId = generateQuestionId(categoryId);
     const newQuestion = {
         id: newId,
         question: "",
         answer: ""
     };
-    
-    const categoryIndex = faqData.findIndex(cat => cat.id === categoryId);
-    faqData[categoryIndex].questions.push(newQuestion);
+
+    getQuestionList(categoryId, groupId).push(newQuestion);
+    expandedCategories[categoryId] = true;
+    if (groupId) expandedGroups[groupId] = true;
     expandedQuestions[newId] = true;
     editingQuestion = newId;
+    renderEditMode();
+}
+
+// 新增分組（例如：新生、舊生、校外人士）
+function addGroup(categoryId) {
+    const cat = faqData.find(c => c.id === categoryId);
+    if (!cat.groups) cat.groups = [];
+    const newId = makeGroupId(cat);
+    cat.groups.push({ id: newId, groupName: "", questions: [] });
+    expandedCategories[categoryId] = true;
+    editingGroup = newId;
     renderEditMode();
 }
 
@@ -371,12 +538,55 @@ function deleteCategory(categoryId) {
 // 刪除問題
 function deleteQuestion(categoryId, questionId) {
     if (confirm('確定要刪除此問題嗎？')) {
-        const categoryIndex = faqData.findIndex(cat => cat.id === categoryId);
-        faqData[categoryIndex].questions = faqData[categoryIndex].questions.filter(q => q.id !== questionId);
+        const found = findQuestion(questionId);
+        if (found) found.list.splice(found.index, 1);
         editingQuestion = null;
         renderEditMode();
         renderPreview();
     }
+}
+
+// 刪除分組（分組底下的問題會一起刪除）
+function deleteGroup(categoryId, groupId) {
+    const cat = faqData.find(c => c.id === categoryId);
+    const group = cat.groups.find(g => g.id === groupId);
+    const message = group.questions.length > 0
+        ? `確定要刪除分組「${group.groupName || '未命名分組'}」嗎？\n底下的 ${group.questions.length} 個問題也會一起刪除！`
+        : `確定要刪除分組「${group.groupName || '未命名分組'}」嗎？`;
+    if (confirm(message)) {
+        cat.groups = cat.groups.filter(g => g.id !== groupId);
+        if (cat.groups.length === 0) delete cat.groups;   // 沒有分組時，JSON 裡不留空的 groups
+        editingGroup = null;
+        renderEditMode();
+        renderPreview();
+    }
+}
+
+// 儲存分組名稱
+function saveGroupEdit(categoryId, groupId, newName) {
+    const cat = faqData.find(c => c.id === categoryId);
+    cat.groups.find(g => g.id === groupId).groupName = newName.trim();
+    editingGroup = null;
+    renderEditMode();
+    renderPreview();
+}
+
+// 從輸入框儲存分組名稱
+function saveGroupFromInput(categoryId, groupId) {
+    const input = document.getElementById(`edit-grp-${groupId}`);
+    saveGroupEdit(categoryId, groupId, input ? input.value : '');
+}
+
+// 編輯分組名稱
+function editGroup(groupId) {
+    editingGroup = groupId;
+    renderEditMode();
+}
+
+// 切換分組展開狀態
+function toggleGroup(groupId) {
+    expandedGroups[groupId] = expandedGroups[groupId] === false;
+    renderEditMode();
 }
 
 // 儲存類別編輯
@@ -389,22 +599,14 @@ function saveCategoryEdit(categoryId, newName) {
 }
 
 // 儲存問題編輯
-function saveQuestionEdit(categoryId, questionId, newQuestion, newAnswer, newSubCategory = '') {
-    const categoryIndex = faqData.findIndex(cat => cat.id === categoryId);
-    const questionIndex = faqData[categoryIndex].questions.findIndex(q => q.id === questionId);
+function saveQuestionEdit(categoryId, questionId, newQuestion, newAnswer) {
+    const found = findQuestion(questionId);
     
     // 自動轉換答案中的URL為超連結
     const processedAnswer = convertUrlsToLinks(newAnswer);
     
-    faqData[categoryIndex].questions[questionIndex].question = newQuestion;
-    faqData[categoryIndex].questions[questionIndex].answer = processedAnswer;
-    // 子類別為選填：有填才寫入，清空就移除欄位
-    const subName = (newSubCategory || '').trim();
-    if (subName) {
-        faqData[categoryIndex].questions[questionIndex].subCategory = subName;
-    } else {
-        delete faqData[categoryIndex].questions[questionIndex].subCategory;
-    }
+    found.list[found.index].question = newQuestion;
+    found.list[found.index].answer = processedAnswer;
     editingQuestion = null;
     renderEditMode();
     renderPreview();
@@ -430,116 +632,16 @@ function toggleQuestion(questionId) {
     }
 }
 
-// 渲染編輯模式
-function renderEditMode() {
-    saveToStorage(); // 每次畫面更新就自動暫存
-    if (faqData.length === 0) {
-        emptyState.style.display = 'block';
-        categoriesContainer.innerHTML = '';
-        return;
-    }
-
-    emptyState.style.display = 'none';
-    categoriesContainer.innerHTML = faqData.map((category, categoryIndex) => `
-        <div class="card-modern p-6 sortable-item draggable" 
-             draggable="true"
-             ondragstart="handleCategoryDragStart(event, ${categoryIndex})"
-             ondragend="handleCategoryDragEnd(event)"
-             ondragover="handleCategoryDragOver(event)"
-             ondrop="handleCategoryDrop(event, ${categoryIndex})">
-            <div class="category-header p-6 mb-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <!-- 拖拽手柄 -->
-                        <div class="drag-handle p-1" title="拖拽移動類別">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <line x1="3" y1="6" x2="21" y2="6"/>
-                                <line x1="3" y1="12" x2="21" y2="12"/>
-                                <line x1="3" y1="18" x2="21" y2="18"/>
-                            </svg>
-                        </div>
-                        <button onclick="toggleCategory('${category.id}')" class="btn-modern p-3">
-                            <svg class="icon transition-transform" viewBox="0 0 24 24">
-                                ${expandedCategories[category.id] ? 
-                                    '<polyline points="6,9 12,15 18,9"></polyline>' : 
-                                    '<polyline points="9,18 15,12 9,6"></polyline>'
-                                }
-                            </svg>
-                        </button>
-                        ${editingCategory === category.id ? 
-                            `<input type="text" value="${category.categoryName}" 
-                                   class="input-modern text-xl font-bold flex-1"
-                                   placeholder="輸入類別名稱"
-                                   id="edit-cat-${category.id}">` :
-                            `<h3 class="text-xl font-bold text-gray-800">${category.categoryName || '未命名類別'}</h3>`
-                        }
-                        <span class="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-lg font-medium">
-                            ${category.id}
-                        </span>
-                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                            ${category.questions.length} 個問題
-                        </span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        ${editingCategory === category.id ? `
-                            <button onclick="saveCategoryFromInput('${category.id}')" class="btn-modern btn-success p-3" title="儲存">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                                    <polyline points="17,21 17,13 7,13 7,21"/>
-                                    <polyline points="7,3 7,8 15,8"/>
-                                </svg>
-                            </button>
-                            <button onclick="cancelEdit()" class="btn-modern p-3 hover:bg-gray-50" title="取消">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                            </button>
-                        ` : `
-                            <button onclick="editCategory('${category.id}')" class="btn-modern p-3 hover:bg-blue-50 text-blue-600" title="編輯類別">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                            </button>
-                            <button onclick="addQuestion('${category.id}')" class="btn-modern btn-success p-3" title="新增問題">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <line x1="12" y1="5" x2="12" y2="19"/>
-                                    <line x1="5" y1="12" x2="19" y2="12"/>
-                                </svg>
-                            </button>
-                            <button onclick="deleteCategory('${category.id}')" class="btn-modern btn-danger p-3" title="刪除類別">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <polyline points="3,6 5,6 21,6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                            </button>
-                        `}
-                    </div>
-                </div>
-            </div>
-            
-            ${expandedCategories[category.id] ? `
-                <div class="space-y-4 ml-4 sortable-container">
-                    ${category.questions.length === 0 ? `
-                        <div class="empty-state p-8 text-center">
-                            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                <line x1="12" y1="17" x2="12.01" y2="17"/>
-                            </svg>
-                            <p class="text-gray-500 mb-4">此類別尚無問題</p>
-                            <button onclick="addQuestion('${category.id}')" class="btn-modern btn-success px-6 py-3">
-                                新增問題
-                            </button>
-                        </div>
-                    ` : category.questions.map((question, questionIndex) => `
+// 一題問題的卡片（group 是 null = 類別直屬；否則是所在的分組）
+function renderQuestionItem(category, group, question, questionIndex) {
+    const groupId = group ? group.id : '';
+    return `
                         <div class="question-item p-4 sortable-item draggable" 
                              draggable="true"
-                             ondragstart="handleQuestionDragStart(event, '${category.id}', ${questionIndex})"
+                             ondragstart="handleQuestionDragStart(event, '${category.id}', '${groupId}', ${questionIndex})"
                              ondragend="handleQuestionDragEnd(event)"
                              ondragover="handleQuestionDragOver(event)"
-                             ondrop="handleQuestionDrop(event, '${category.id}', ${questionIndex})">
+                             ondrop="handleQuestionDrop(event, '${category.id}', '${groupId}', ${questionIndex})">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3 flex-1">
                                     <!-- 問題拖拽手柄 -->
@@ -564,14 +666,9 @@ function renderEditMode() {
                                                    class="input-modern font-semibold w-full"
                                                    placeholder="輸入問題標題"
                                                    id="edit-q-${question.id}">
-                                            <input type="text" value="${escapeHtml(question.subCategory || '')}"
-                                                   class="input-modern w-full text-sm"
-                                                   placeholder="子類別（選填，例如：新生）"
-                                                   id="edit-sub-${question.id}">
                                         </div>` :
                                         `<div class="flex-1">
                                             <h4 class="font-semibold text-gray-800">${question.question || '未命名問題'}</h4>
-                                            ${question.subCategory ? `<span class="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">${escapeHtml(question.subCategory)}</span>` : ''}
                                         </div>`
                                     }
                                     <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg font-mono">
@@ -634,7 +731,215 @@ function renderEditMode() {
                                 </div>
                             ` : ''}
                         </div>
-                    `).join('')}
+`;
+}
+
+// 一個分組的區塊（藍底白字的名稱 + 底下的問題）
+function renderGroupBox(category, group, groupIndex) {
+    const expanded = expandedGroups[group.id] !== false;
+    const editing = editingGroup === group.id;
+    const questionsHtml = group.questions.length === 0
+        ? `<div class="p-4 text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-lg"
+                ondragover="handleQuestionDragOver(event)"
+                ondrop="handleQuestionDrop(event, '${category.id}', '${group.id}', 0)">
+               此分組尚無問題（可以按右上角的「＋」新增，或把其他問題拖進來）
+           </div>`
+        : group.questions.map((q, qi) => renderQuestionItem(category, group, q, qi)).join('');
+
+    return `
+        <div class="rounded-xl border-2 border-[#c9d3e6] bg-[#f4f6fb] p-3 space-y-3">
+            <div class="flex items-center justify-between"
+                 draggable="true"
+                 ondragstart="handleGroupDragStart(event, '${category.id}', ${groupIndex})"
+                 ondragend="handleQuestionDragEnd(event)"
+                 ondragover="handleGroupDragOver(event)"
+                 ondrop="handleGroupDrop(event, '${category.id}', ${groupIndex})">
+                <div class="flex items-center space-x-3 flex-1">
+                    <div class="drag-handle p-1" title="拖拽移動分組">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </div>
+                    <button onclick="toggleGroup('${group.id}')" class="btn-modern p-2">
+                        <svg class="icon transition-transform" viewBox="0 0 24 24">
+                            ${expanded ?
+                                '<polyline points="6,9 12,15 18,9"></polyline>' :
+                                '<polyline points="9,18 15,12 9,6"></polyline>'
+                            }
+                        </svg>
+                    </button>
+                    ${editing
+                        ? `<input type="text" value="${escapeHtml(group.groupName)}"
+                                  class="input-modern font-bold flex-1"
+                                  placeholder="輸入分組名稱（例如：新生）"
+                                  id="edit-grp-${group.id}">`
+                        : groupPillHtml(group.groupName)}
+                    <span class="px-2 py-1 bg-white text-gray-600 text-xs rounded-lg">${group.questions.length} 個問題</span>
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg font-mono">${group.id}</span>
+                </div>
+                <div class="flex items-center space-x-1 ml-3">
+                    ${editing ? `
+                        <button onclick="saveGroupFromInput('${category.id}', '${group.id}')" class="btn-modern btn-success p-2" title="儲存">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17,21 17,13 7,13 7,21"/>
+                                <polyline points="7,3 7,8 15,8"/>
+                            </svg>
+                        </button>
+                        <button onclick="cancelEdit()" class="btn-modern p-2 hover:bg-gray-50" title="取消">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    ` : `
+                        <button onclick="addQuestion('${category.id}', '${group.id}')" class="btn-modern btn-success p-2" title="在這個分組新增問題">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                        <button onclick="editGroup('${group.id}')" class="btn-modern p-2 hover:bg-blue-50 text-blue-600" title="修改分組名稱">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button onclick="deleteGroup('${category.id}', '${group.id}')" class="btn-modern btn-danger p-2" title="刪除分組">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <polyline points="3,6 5,6 21,6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    `}
+                </div>
+            </div>
+            ${expanded ? `<div class="space-y-4 ml-4">${questionsHtml}</div>` : ''}
+        </div>
+    `;
+}
+
+// 類別展開後的內容：直屬問題 + 各個分組
+function renderCategoryBody(category) {
+    const directHtml = category.questions.map((q, qi) => renderQuestionItem(category, null, q, qi)).join('');
+    const groupsHtml = (category.groups || []).map((g, gi) => renderGroupBox(category, g, gi)).join('');
+
+    if (!directHtml && !groupsHtml) {
+        return `
+            <div class="empty-state p-8 text-center">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <p class="text-gray-500 mb-4">此類別尚無內容</p>
+                <div class="flex justify-center space-x-3">
+                    <button onclick="addQuestion('${category.id}')" class="btn-modern btn-success px-6 py-3">新增問題</button>
+                    <button onclick="addGroup('${category.id}')" class="btn-modern px-6 py-3 font-bold text-[#425b8f]">新增分組</button>
+                </div>
+            </div>
+        `;
+    }
+    return directHtml + groupsHtml;
+}
+
+// 渲染編輯模式
+function renderEditMode() {
+    saveToStorage(); // 每次畫面更新就自動暫存
+    if (faqData.length === 0) {
+        emptyState.style.display = 'block';
+        categoriesContainer.innerHTML = '';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    categoriesContainer.innerHTML = faqData.map((category, categoryIndex) => `
+        <div class="card-modern p-6 sortable-item draggable" 
+             draggable="true"
+             ondragstart="handleCategoryDragStart(event, ${categoryIndex})"
+             ondragend="handleCategoryDragEnd(event)"
+             ondragover="handleCategoryDragOver(event)"
+             ondrop="handleCategoryDrop(event, ${categoryIndex})">
+            <div class="category-header p-6 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- 拖拽手柄 -->
+                        <div class="drag-handle p-1" title="拖拽移動類別">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <line x1="3" y1="12" x2="21" y2="12"/>
+                                <line x1="3" y1="18" x2="21" y2="18"/>
+                            </svg>
+                        </div>
+                        <button onclick="toggleCategory('${category.id}')" class="btn-modern p-3">
+                            <svg class="icon transition-transform" viewBox="0 0 24 24">
+                                ${expandedCategories[category.id] ? 
+                                    '<polyline points="6,9 12,15 18,9"></polyline>' : 
+                                    '<polyline points="9,18 15,12 9,6"></polyline>'
+                                }
+                            </svg>
+                        </button>
+                        ${editingCategory === category.id ? 
+                            `<input type="text" value="${category.categoryName}" 
+                                   class="input-modern text-xl font-bold flex-1"
+                                   placeholder="輸入類別名稱"
+                                   id="edit-cat-${category.id}">` :
+                            `<h3 class="text-xl font-bold text-gray-800">${category.categoryName || '未命名類別'}</h3>`
+                        }
+                        <span class="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-lg font-medium">
+                            ${category.id}
+                        </span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                            ${getAllQuestions(category).length} 個問題
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${editingCategory === category.id ? `
+                            <button onclick="saveCategoryFromInput('${category.id}')" class="btn-modern btn-success p-3" title="儲存">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17,21 17,13 7,13 7,21"/>
+                                    <polyline points="7,3 7,8 15,8"/>
+                                </svg>
+                            </button>
+                            <button onclick="cancelEdit()" class="btn-modern p-3 hover:bg-gray-50" title="取消">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        ` : `
+                            <button onclick="editCategory('${category.id}')" class="btn-modern p-3 hover:bg-blue-50 text-blue-600" title="編輯類別">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button onclick="addQuestion('${category.id}')" class="btn-modern btn-success p-3" title="新增問題">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                            <button onclick="addGroup('${category.id}')" class="btn-modern px-3 py-3 font-bold text-sm text-[#425b8f]" title="新增分組（例如：新生、舊生、校外人士）">
+                                ＋分組
+                            </button>
+                            <button onclick="deleteCategory('${category.id}')" class="btn-modern btn-danger p-3" title="刪除類別">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <polyline points="3,6 5,6 21,6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>
+            
+            ${expandedCategories[category.id] ? `
+                <div class="space-y-4 ml-4 sortable-container">
+                    ${renderCategoryBody(category)}
                 </div>
             ` : ''}
         </div>
@@ -649,6 +954,13 @@ function renderEditMode() {
                 input.select();
             }
         }
+        if (editingGroup) {
+            const input = document.getElementById(`edit-grp-${editingGroup}`);
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }
         if (editingQuestion) {
             const input = document.getElementById(`edit-q-${editingQuestion}`);
             if (input) {
@@ -657,6 +969,42 @@ function renderEditMode() {
             }
         }
     }, 100);
+}
+
+// 預覽模式：一題問題
+function renderPreviewQuestion(question) {
+    return `
+                        <div class="question-item">
+                            <button onclick="toggleQuestion('preview_${question.id}')" 
+                                    class="w-full p-4 text-left hover:bg-white transition-all duration-200 rounded-lg flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                        </svg>
+                                    </div>
+                                    <span class="font-medium text-gray-800">
+                                        ${question.question}
+                                    </span>
+                                </div>
+                                <svg class="icon text-gray-400 transition-all" viewBox="0 0 24 24">
+                                    ${expandedQuestions[`preview_${question.id}`] ? 
+                                        '<polyline points="6,9 12,15 18,9"></polyline>' : 
+                                        '<polyline points="9,18 15,12 9,6"></polyline>'
+                                    }
+                                </svg>
+                            </button>
+                            ${expandedQuestions[`preview_${question.id}`] ? `
+                                <div class="ml-9 mr-6 mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                    <div class="text-gray-700 leading-relaxed whitespace-pre-line">
+                                        ${question.answer}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+`;
 }
 
 // 渲染預覽模式
@@ -692,7 +1040,7 @@ function renderPreview() {
                         <h3 class="text-xl font-bold text-gray-800">
                             ${category.categoryName}
                         </h3>
-                        <p class="text-sm text-gray-500">${category.questions.length} 個問題</p>
+                        <p class="text-sm text-gray-500">${getAllQuestions(category).length} 個問題</p>
                     </div>
                 </div>
                 <svg class="icon-lg text-gray-400 transition-all" viewBox="0 0 24 24">
@@ -704,38 +1052,10 @@ function renderPreview() {
             </button>
             ${expandedCategories[`preview_${category.id}`] ? `
                 <div class="p-6 space-y-4 bg-gray-50">
-                    ${category.questions.map((question, qIndex) => `
-                        ${question.subCategory && question.subCategory !== (category.questions[qIndex - 1] || {}).subCategory ? `<div class="pt-2 pb-1 text-sm font-semibold text-blue-700 border-b border-blue-100">${escapeHtml(question.subCategory)}</div>` : ''}
-                        <div class="question-item">
-                            <button onclick="toggleQuestion('preview_${question.id}')" 
-                                    class="w-full p-4 text-left hover:bg-white transition-all duration-200 rounded-lg flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center">
-                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
-                                        </svg>
-                                    </div>
-                                    <span class="font-medium text-gray-800">
-                                        ${question.question}
-                                    </span>
-                                </div>
-                                <svg class="icon text-gray-400 transition-all" viewBox="0 0 24 24">
-                                    ${expandedQuestions[`preview_${question.id}`] ? 
-                                        '<polyline points="6,9 12,15 18,9"></polyline>' : 
-                                        '<polyline points="9,18 15,12 9,6"></polyline>'
-                                    }
-                                </svg>
-                            </button>
-                            ${expandedQuestions[`preview_${question.id}`] ? `
-                                <div class="ml-9 mr-6 mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                    <div class="text-gray-700 leading-relaxed whitespace-pre-line">
-                                        ${question.answer}
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
+                    ${category.questions.map(q => renderPreviewQuestion(q)).join('')}
+                    ${(category.groups || []).map(g => `
+                        <div class="pt-3 pb-1">${groupPillHtml(g.groupName)}</div>
+                        ${g.questions.map(q => renderPreviewQuestion(q)).join('')}
                     `).join('')}
                 </div>
             ` : ''}
@@ -766,17 +1086,16 @@ function saveCategoryFromInput(categoryId) {
 function saveQuestionFromInput(categoryId, questionId) {
     const questionInput = document.getElementById(`edit-q-${questionId}`);
     const answerInput = document.getElementById(`answer-${questionId}`);
-    const subInput = document.getElementById(`edit-sub-${questionId}`);
     const newQuestion = questionInput ? questionInput.value : '';
     const newAnswer = answerInput ? answerInput.value : '';
-    const newSubCategory = subInput ? subInput.value : '';
-    saveQuestionEdit(categoryId, questionId, newQuestion, newAnswer, newSubCategory);
+    saveQuestionEdit(categoryId, questionId, newQuestion, newAnswer);
 }
 
 // 取消編輯
 function cancelEdit() {
     editingCategory = null;
     editingQuestion = null;
+    editingGroup = null;
     renderEditMode();
 }
 
@@ -835,7 +1154,7 @@ function importJSON(event) {
                     showNotification('匯入失敗：' + validationError, 'error');
                     return;
                 }
-                faqData = importedData;
+                faqData = upgradeToGroups(importedData);
                 
                 // 自動偵測部門代碼
                 if (faqData.length > 0) {
