@@ -2,282 +2,411 @@
   {
     "id": "hd_c1_1",
     "categoryName": "諮輔組我想認識你",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c1_11",
-        "question": "諮輔組在做什麼?",
-        "answer": "在守護與增進本校學生的身心健康 :)\n期望透過各種輔導形式，協助學生自我認識與接納、調適壓力與情緒、提升解決問題能力，促進對周遭環境的調適能力，除此外，也期待能協助追尋生命中的快樂與幸福感!",
-        "subCategory": "諮輔組在做什麼?"
+        "id": "hd_c1_g1",
+        "groupName": "諮輔組在做什麼?",
+        "questions": [
+          {
+            "id": "hd_c1_11",
+            "question": "諮輔組在做什麼?",
+            "answer": "在守護與增進本校學生的身心健康 :)\n期望透過各種輔導形式，協助學生自我認識與接納、調適壓力與情緒、提升解決問題能力，促進對周遭環境的調適能力，除此外，也期待能協助追尋生命中的快樂與幸福感!"
+          }
+        ]
       },
       {
-        "id": "hd_c1_12",
-        "question": "開放時間/地點",
-        "answer": "建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n建工：行政大樓6樓\n第一：行政大樓2樓(院系專輔)/活動中心1樓(資源教室)\n楠梓：行政大樓6樓\n燕巢：行政大樓2樓\n旗津：海事大樓3樓",
-        "subCategory": "如何找到你們?"
+        "id": "hd_c1_g2",
+        "groupName": "如何找到你們?",
+        "questions": [
+          {
+            "id": "hd_c1_12",
+            "question": "開放時間/地點",
+            "answer": "建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n建工：行政大樓6樓\n第一：行政大樓2樓(院系專輔)/活動中心1樓(資源教室)\n楠梓：行政大樓6樓\n燕巢：行政大樓2樓\n旗津：海事大樓3樓"
+          },
+          {
+            "id": "hd_c1_13",
+            "question": "聯繫電話",
+            "answer": "電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)"
+          }
+        ]
       },
       {
-        "id": "hd_c1_13",
-        "question": "聯繫電話",
-        "answer": "電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)",
-        "subCategory": "如何找到你們?"
+        "id": "hd_c1_g3",
+        "groupName": "有哪些服務與資源?",
+        "questions": [
+          {
+            "id": "hd_c1_14",
+            "question": "學生區",
+            "answer": "我們提供：個別晤談、成長團體、心理測驗、心理健康講座/工作坊、身心科醫師諮詢、諮輔月刊、情緒檢測DIY，協助你自成長與增進生活滿意度，歡迎到諮輔組網頁(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10414.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10414.php</a> 查看喔!"
+          },
+          {
+            "id": "hd_c1_15",
+            "question": "教師區",
+            "answer": "我們提供：教師諮詢、輔導知能研習、班級輔導、系務宣導、身心科醫師諮詢、諮輔月刊，歡迎到諮輔組(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10414.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10414.php</a> 查看喔!"
+          }
+        ]
       },
       {
-        "id": "hd_c1_14",
-        "question": "學生區",
-        "answer": "我們提供：個別晤談、成長團體、心理測驗、心理健康講座/工作坊、身心科醫師諮詢、諮輔月刊、情緒檢測DIY，協助你自成長與增進生活滿意度，歡迎到諮輔組網頁(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10414.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10414.php</a> 查看喔!",
-        "subCategory": "有哪些服務與資源?"
+        "id": "hd_c1_g4",
+        "groupName": "我的系所輔導老師是誰?",
+        "questions": [
+          {
+            "id": "hd_c1_16",
+            "question": "我的系所輔導老師是誰?",
+            "answer": "每個校區與科系都有各自負責的系所輔導老師，歡迎點選下方連結查詢你的系所輔導老師與聯繫方式!\n諮商輔導組專任輔導人員：<a href=\"https://osa.nkust.edu.tw/p/412-1154-10561.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10561.php?Lang=zh-tw</a>"
+          }
+        ]
       },
       {
-        "id": "hd_c1_15",
-        "question": "教師區",
-        "answer": "我們提供：教師諮詢、輔導知能研習、班級輔導、系務宣導、身心科醫師諮詢、諮輔月刊，歡迎到諮輔組(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10414.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10414.php</a> 查看喔!",
-        "subCategory": "有哪些服務與資源?"
-      },
-      {
-        "id": "hd_c1_16",
-        "question": "我的系所輔導老師是誰?",
-        "answer": "每個校區與科系都有各自負責的系所輔導老師，歡迎點選下方連結查詢你的系所輔導老師與聯繫方式!\n諮商輔導組專任輔導人員：<a href=\"https://osa.nkust.edu.tw/p/412-1154-10561.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10561.php?Lang=zh-tw</a>",
-        "subCategory": "我的系所輔導老師是誰?"
-      },
-      {
-        "id": "hd_c1_17",
-        "question": "查詢我的特教老師",
-        "answer": "特教輔導老師在你入學前的暑假便會跟你聯繫，並在開學後約時間討論大學期間的特教需求喔 : )\n查看我的特教老師(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10568.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10568.php</a>",
-        "subCategory": "我是特教生，想找特教老師和資源"
-      },
-      {
-        "id": "hd_c1_18",
-        "question": "聯繫資訊",
-        "answer": "電話：07-3814526\n建工校區行政大樓6樓，分機12546\n第一校區活動中心1樓，分機31247\n楠梓校區行政大樓6樓，分機23996\n燕巢校區行政大樓2樓，分機18623\n旗津校區海事大樓3樓，分機25092",
-        "subCategory": "我是特教生，想找特教老師和資源"
-      },
-      {
-        "id": "hd_c1_19",
-        "question": "查看特教資源",
-        "answer": "主要為協助學生於生活、學業、生涯、社會參與等相關輔導工作，輔導服務一覽表(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10628.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10628.php?Lang=zh-tw</a>",
-        "subCategory": "我是特教生，想找特教老師和資源"
+        "id": "hd_c1_g5",
+        "groupName": "我是特教生，想找特教老師和資源",
+        "questions": [
+          {
+            "id": "hd_c1_17",
+            "question": "查詢我的特教老師",
+            "answer": "特教輔導老師在你入學前的暑假便會跟你聯繫，並在開學後約時間討論大學期間的特教需求喔 : )\n查看我的特教老師(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10568.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10568.php</a>"
+          },
+          {
+            "id": "hd_c1_18",
+            "question": "聯繫資訊",
+            "answer": "電話：07-3814526\n建工校區行政大樓6樓，分機12546\n第一校區活動中心1樓，分機31247\n楠梓校區行政大樓6樓，分機23996\n燕巢校區行政大樓2樓，分機18623\n旗津校區海事大樓3樓，分機25092"
+          },
+          {
+            "id": "hd_c1_19",
+            "question": "查看特教資源",
+            "answer": "主要為協助學生於生活、學業、生涯、社會參與等相關輔導工作，輔導服務一覽表(網址): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10628.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10628.php?Lang=zh-tw</a>"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c2_2",
     "categoryName": "什麼是諮商晤談?",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c2_21",
-        "question": "我想了解自己目前的心情狀態?",
-        "answer": "歡迎點選情緒DIY測驗(網址): <a href=\"https://ws1.nkust.edu.tw/tutor/Account/KsLogin\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://ws1.nkust.edu.tw/tutor/Account/KsLogin</a> ，只要10分鐘就可以得出心情狀態囉!",
-        "subCategory": "我想了解自己目前的心情狀態?"
+        "id": "hd_c2_g1",
+        "groupName": "我想了解自己目前的心情狀態?",
+        "questions": [
+          {
+            "id": "hd_c2_21",
+            "question": "我想了解自己目前的心情狀態?",
+            "answer": "歡迎點選情緒DIY測驗(網址): <a href=\"https://ws1.nkust.edu.tw/tutor/Account/KsLogin\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://ws1.nkust.edu.tw/tutor/Account/KsLogin</a> ，只要10分鐘就可以得出心情狀態囉!"
+          }
+        ]
       },
       {
-        "id": "hd_c2_22",
-        "question": "諮商是什麼?會怎麼進行呢?",
-        "answer": "諮商是藉由與專業的輔導人員對話，在安全與保密的環境中，探討自身關於情緒困擾、人際關係、課業生涯等議題，透過一次次的諮商對話，增加對於自我的認識，進而產生新的方法或姿態應對壓力事件。",
-        "subCategory": "諮商是什麼?會怎麼進行呢?"
+        "id": "hd_c2_g2",
+        "groupName": "諮商是什麼?會怎麼進行呢?",
+        "questions": [
+          {
+            "id": "hd_c2_22",
+            "question": "諮商是什麼?會怎麼進行呢?",
+            "answer": "諮商是藉由與專業的輔導人員對話，在安全與保密的環境中，探討自身關於情緒困擾、人際關係、課業生涯等議題，透過一次次的諮商對話，增加對於自我的認識，進而產生新的方法或姿態應對壓力事件。"
+          }
+        ]
       },
       {
-        "id": "hd_c2_23",
-        "question": "要怎麼申請諮商?",
-        "answer": "非常歡迎同學們與輔導人員談心，你可以利用電話、網路申請、或直接至諮輔組與輔導人員約時間。申請諮商晤談(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 每次晤談時間約為五十分鐘，晤談內容完全保密(除保密例外)。",
-        "subCategory": "要怎麼申請諮商?"
+        "id": "hd_c2_g3",
+        "groupName": "要怎麼申請諮商?",
+        "questions": [
+          {
+            "id": "hd_c2_23",
+            "question": "要怎麼申請諮商?",
+            "answer": "非常歡迎同學們與輔導人員談心，你可以利用電話、網路申請、或直接至諮輔組與輔導人員約時間。申請諮商晤談(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 每次晤談時間約為五十分鐘，晤談內容完全保密(除保密例外)。"
+          }
+        ]
       },
       {
-        "id": "hd_c2_24",
-        "question": "我來諮商，身邊的人會知道嗎?",
-        "answer": "根據專業倫理與法規，我們會為諮商內容保密，並以機密方式處理與保管。若有與重要他人溝通的需要，一定在取得您的同意後，才向必要對象公開。然當發生危及自己或他人生命、自由、財產、及安全的情況下或涉及法律責任必須通報時，才會在保護來談者的立場下，打破保密通報相關人員予以協助。",
-        "subCategory": "關於諮商，常有的疑問.."
+        "id": "hd_c2_g4",
+        "groupName": "關於諮商，常有的疑問..",
+        "questions": [
+          {
+            "id": "hd_c2_24",
+            "question": "我來諮商，身邊的人會知道嗎?",
+            "answer": "根據專業倫理與法規，我們會為諮商內容保密，並以機密方式處理與保管。若有與重要他人溝通的需要，一定在取得您的同意後，才向必要對象公開。然當發生危及自己或他人生命、自由、財產、及安全的情況下或涉及法律責任必須通報時，才會在保護來談者的立場下，打破保密通報相關人員予以協助。"
+          },
+          {
+            "id": "hd_c2_25",
+            "question": "我該不該來諮商呢?",
+            "answer": "如果感到壓力很大，且無法有效地處理或解決，歡迎尋求諮商的幫助。晤談輔導的老師可以提供專業的支持和指導，幫助你理解和處理壓力源，並找到適合你的解決方案。"
+          },
+          {
+            "id": "hd_c2_26",
+            "question": "我可以跨校區晤談嗎?",
+            "answer": "因為每個校區、院系皆專屬院系之專業輔導人員，故目前並無開放跨校區晤談。然，若有特殊需要，也請先預約所屬校區的諮商晤談，在初次晤談時提出需求，我們會視情況安排唷。"
+          },
+          {
+            "id": "hd_c2_27",
+            "question": "為什麼要預約?",
+            "answer": "預約是為了保留最完整的時間、空間給預約的你，讓諮商晤談過程能夠不受其他事情干擾。如果你臨時感覺很難受，緊急需要找到幫忙的人，也可直接來諮輔組找我們協助。"
+          }
+        ]
       },
       {
-        "id": "hd_c2_25",
-        "question": "我該不該來諮商呢?",
-        "answer": "如果感到壓力很大，且無法有效地處理或解決，歡迎尋求諮商的幫助。晤談輔導的老師可以提供專業的支持和指導，幫助你理解和處理壓力源，並找到適合你的解決方案。",
-        "subCategory": "關於諮商，常有的疑問.."
+        "id": "hd_c2_g5",
+        "groupName": "我是學校教職員，也可以預約心理諮商嗎?",
+        "questions": [
+          {
+            "id": "hd_c2_28",
+            "question": "我是學校教職員，也可以預約心理諮商嗎?",
+            "answer": "教職員的諮商需求，請參考人事室網頁的員工協助專區(網址): <a href=\"https://personnel.nkust.edu.tw/p/403-1019-351.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://personnel.nkust.edu.tw/p/403-1019-351.php</a>  由於本組主要服務的對象為全校學生；也為避免諮商倫理的雙重關係，因此教職員的心理諮商服務較建議在校外進行。但本組每個月均有外聘身心科醫師駐校提供諮詢服務，這就是教職員也可以使用的資源喔^^"
+          }
+        ]
       },
       {
-        "id": "hd_c2_26",
-        "question": "我可以跨校區晤談嗎?",
-        "answer": "因為每個校區、院系皆專屬院系之專業輔導人員，故目前並無開放跨校區晤談。然，若有特殊需要，也請先預約所屬校區的諮商晤談，在初次晤談時提出需求，我們會視情況安排唷。",
-        "subCategory": "關於諮商，常有的疑問.."
+        "id": "hd_c2_g6",
+        "groupName": "我感覺被霸凌了",
+        "questions": [
+          {
+            "id": "hd_c2_29",
+            "question": "高科大反霸凌專區",
+            "answer": "感覺被霸凌時，除了找導師與同學討論之外，如果是想瞭解學校的霸凌處理程序，可點選高科大反霸凌專區(網址): <a href=\"https://stu.nkust.edu.tw/p/412-1007-5847.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://stu.nkust.edu.tw/p/412-1007-5847.php</a>與承辦人聯繫"
+          },
+          {
+            "id": "hd_c2_210",
+            "question": "想找輔導人員聊聊",
+            "answer": "如果是想討論此事件對自己身心的影響，可申請諮商(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 與輔導人員聊聊自己的狀態。切記，如果有被霸凌的感受，請記得尋求他人的協助，不要獨自承受壓力。"
+          }
+        ]
       },
       {
-        "id": "hd_c2_27",
-        "question": "為什麼要預約?",
-        "answer": "預約是為了保留最完整的時間、空間給預約的你，讓諮商晤談過程能夠不受其他事情干擾。如果你臨時感覺很難受，緊急需要找到幫忙的人，也可直接來諮輔組找我們協助。",
-        "subCategory": "關於諮商，常有的疑問.."
-      },
-      {
-        "id": "hd_c2_28",
-        "question": "我是學校教職員，也可以預約心理諮商嗎?",
-        "answer": "教職員的諮商需求，請參考人事室網頁的員工協助專區(網址): <a href=\"https://personnel.nkust.edu.tw/p/403-1019-351.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://personnel.nkust.edu.tw/p/403-1019-351.php</a>  由於本組主要服務的對象為全校學生；也為避免諮商倫理的雙重關係，因此教職員的心理諮商服務較建議在校外進行。但本組每個月均有外聘身心科醫師駐校提供諮詢服務，這就是教職員也可以使用的資源喔^^",
-        "subCategory": "我是學校教職員，也可以預約心理諮商嗎?"
-      },
-      {
-        "id": "hd_c2_29",
-        "question": "高科大反霸凌專區",
-        "answer": "感覺被霸凌時，除了找導師與同學討論之外，如果是想瞭解學校的霸凌處理程序，可點選高科大反霸凌專區(網址): <a href=\"https://stu.nkust.edu.tw/p/412-1007-5847.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://stu.nkust.edu.tw/p/412-1007-5847.php</a>與承辦人聯繫",
-        "subCategory": "我感覺被霸凌了"
-      },
-      {
-        "id": "hd_c2_210",
-        "question": "想找輔導人員聊聊",
-        "answer": "如果是想討論此事件對自己身心的影響，可申請諮商(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 與輔導人員聊聊自己的狀態。切記，如果有被霸凌的感受，請記得尋求他人的協助，不要獨自承受壓力。",
-        "subCategory": "我感覺被霸凌了"
-      },
-      {
-        "id": "hd_c2_211",
-        "question": "行政程序",
-        "answer": "當你感覺被性騷擾時，鼓勵你可以聯繫學校的性別平等委員會，釐清性騷擾的事項與後續處理高科大性平專區網址: <a href=\"https://gender.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://gender.nkust.edu.tw/</a>",
-        "subCategory": "我感覺被性騷了"
-      },
-      {
-        "id": "hd_c2_212",
-        "question": "想找輔導人員聊聊",
-        "answer": "如果是想討論此事件對自己的身心影響，可申請諮商預約系統(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 與輔導人員聊聊自己的狀態。切記，如果有被性騷擾的感受，請記得尋求他人的協助，不要獨自承受壓力。",
-        "subCategory": "我感覺被性騷了"
+        "id": "hd_c2_g7",
+        "groupName": "我感覺被性騷了",
+        "questions": [
+          {
+            "id": "hd_c2_211",
+            "question": "行政程序",
+            "answer": "當你感覺被性騷擾時，鼓勵你可以聯繫學校的性別平等委員會，釐清性騷擾的事項與後續處理高科大性平專區網址: <a href=\"https://gender.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://gender.nkust.edu.tw/</a>"
+          },
+          {
+            "id": "hd_c2_212",
+            "question": "想找輔導人員聊聊",
+            "answer": "如果是想討論此事件對自己的身心影響，可申請諮商預約系統(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> 與輔導人員聊聊自己的狀態。切記，如果有被性騷擾的感受，請記得尋求他人的協助，不要獨自承受壓力。"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c3_3",
     "categoryName": "自己/別人心情不好，怎麼辦?",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c3_31",
-        "question": "校內資源",
-        "answer": "",
-        "subCategory": "當我需要被傾聽瞭解時"
+        "id": "hd_c3_g1",
+        "groupName": "當我需要被傾聽瞭解時",
+        "questions": [
+          {
+            "id": "hd_c3_31",
+            "question": "校內資源",
+            "answer": ""
+          },
+          {
+            "id": "hd_c3_32",
+            "question": "很緊急",
+            "answer": "平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00 您可以親自至諮輔組求助，或用電話聯繫：\n電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)\n校安專線24小時緊急聯絡電話：0800-550-995"
+          },
+          {
+            "id": "hd_c3_33",
+            "question": "可以等待",
+            "answer": "非常歡迎您申請諮商晤談(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> ，各校區負責安排諮商晤談人員將於1-5個工作天內進行確認，並由系統發送一封「晤談通知」電子郵件至您的學校信箱中。"
+          },
+          {
+            "id": "hd_c3_34",
+            "question": "校外資源",
+            "answer": "校外資源一覽表(網址):  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n鄰近諮商所、身心科、醫療資源(網址):  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n高雄市心理衛生、精神醫療(網址): <a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf</a>\nLine的AI心靈會客室(網址):  <a href=\"https://line.me/R/ti/p/%40872ohpkw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://line.me/R/ti/p/%40872ohpkw</a>"
+          }
+        ]
       },
       {
-        "id": "hd_c3_32",
-        "question": "很緊急",
-        "answer": "平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00 您可以親自至諮輔組求助，或用電話聯繫：\n電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)\n校安專線24小時緊急聯絡電話：0800-550-995",
-        "subCategory": "當我需要被傾聽瞭解時"
+        "id": "hd_c3_g2",
+        "groupName": "當我需要社區資源",
+        "questions": [
+          {
+            "id": "hd_c3_35",
+            "question": "當我需要社區資源",
+            "answer": "嚴重情緒行為者之醫療整合與團隊資源<a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/104252799.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/104252799.pdf</a>"
+          }
+        ]
       },
       {
-        "id": "hd_c3_33",
-        "question": "可以等待",
-        "answer": "非常歡迎您申請諮商晤談(網址): <a href=\"http://care.nkust.edu.tw/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">http://care.nkust.edu.tw/</a> ，各校區負責安排諮商晤談人員將於1-5個工作天內進行確認，並由系統發送一封「晤談通知」電子郵件至您的學校信箱中。",
-        "subCategory": "當我需要被傾聽瞭解時"
-      },
-      {
-        "id": "hd_c3_34",
-        "question": "校外資源",
-        "answer": "校外資源一覽表(網址):  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n鄰近諮商所、身心科、醫療資源(網址):  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n高雄市心理衛生、精神醫療(網址): <a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf</a>\nLine的AI心靈會客室(網址):  <a href=\"https://line.me/R/ti/p/%40872ohpkw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://line.me/R/ti/p/%40872ohpkw</a>",
-        "subCategory": "當我需要被傾聽瞭解時"
-      },
-      {
-        "id": "hd_c3_35",
-        "question": "當我需要社區資源",
-        "answer": "嚴重情緒行為者之醫療整合與團隊資源<a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/104252799.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/104252799.pdf</a>",
-        "subCategory": "當我需要社區資源"
-      },
-      {
-        "id": "hd_c3_36",
-        "question": "我的朋友最近心情不好，我要怎麼幫他?",
-        "answer": "傾聽會是最好的陪伴，然而如果朋友心情不好的狀況持續好幾週，甚至狀況變得更不好，可以鼓勵朋友求助於身心科或者諮商輔導組。",
-        "subCategory": "我的朋友最近心情不好，我要怎麼幫他?"
+        "id": "hd_c3_g3",
+        "groupName": "我的朋友最近心情不好，我要怎麼幫他?",
+        "questions": [
+          {
+            "id": "hd_c3_36",
+            "question": "我的朋友最近心情不好，我要怎麼幫他?",
+            "answer": "傾聽會是最好的陪伴，然而如果朋友心情不好的狀況持續好幾週，甚至狀況變得更不好，可以鼓勵朋友求助於身心科或者諮商輔導組。"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c4_4",
     "categoryName": "五感陪伴學",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c4_41",
-        "question": "對方透露輕生想法怎麼辦?",
-        "answer": "知悉對方有輕生想法，需要先穩住自己的情緒，傾聽對方遇到的難處，並傳達自己的關心給對方!\n假如對方有明確的自殺計畫或行為，甚至分送他所愛的事物或書寫遺書，請盡快通知對方的重要的親友，一同陪伴對方，並協助對方至精神科等醫療機構就診。\n假如對方是學生身分，可以推薦對方至他們學校的諮商輔導組聊聊近期的壓力；假如對方非學生身分，可以鼓勵對方撥打24小時的安心專線：1925，或與各縣市的社區心理諮商機構聯繫，了解各地之心理諮商資源。",
-        "subCategory": "對方透露輕生想法怎麼辦?"
+        "id": "hd_c4_g1",
+        "groupName": "對方透露輕生想法怎麼辦?",
+        "questions": [
+          {
+            "id": "hd_c4_41",
+            "question": "對方透露輕生想法怎麼辦?",
+            "answer": "知悉對方有輕生想法，需要先穩住自己的情緒，傾聽對方遇到的難處，並傳達自己的關心給對方!\n假如對方有明確的自殺計畫或行為，甚至分送他所愛的事物或書寫遺書，請盡快通知對方的重要的親友，一同陪伴對方，並協助對方至精神科等醫療機構就診。\n假如對方是學生身分，可以推薦對方至他們學校的諮商輔導組聊聊近期的壓力；假如對方非學生身分，可以鼓勵對方撥打24小時的安心專線：1925，或與各縣市的社區心理諮商機構聯繫，了解各地之心理諮商資源。"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c5_5",
     "categoryName": "持續心靈成長區",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c5_51",
-        "question": "請問這學期的活動在哪看呢?",
-        "answer": "<a href=\"https://osa.nkust.edu.tw/p/406-1154-106113,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-106113,r1783.php?Lang=zh-tw</a>",
-        "subCategory": "請問這學期的活動在哪看呢?"
+        "id": "hd_c5_g1",
+        "groupName": "請問這學期的活動在哪看呢?",
+        "questions": [
+          {
+            "id": "hd_c5_51",
+            "question": "請問這學期的活動在哪看呢?",
+            "answer": "<a href=\"https://osa.nkust.edu.tw/p/406-1154-106113,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-106113,r1783.php?Lang=zh-tw</a>"
+          }
+        ]
       },
       {
-        "id": "hd_c5_52",
-        "question": "雄雄遇見你",
-        "answer": "由本組創立，大學生常見的心理與關係主題~歡迎追蹤收聽喔! (網址): <a href=\"https://osa.nkust.edu.tw/p/406-1154-90619,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90619,r1783.php?Lang=zh-tw</a>",
-        "subCategory": "推薦收聽的podcast/youtuber?"
-      },
-      {
-        "id": "hd_c5_53",
-        "question": "校外推薦",
-        "answer": "(已有資料，尚待放上網頁)",
-        "subCategory": "推薦收聽的podcast/youtuber?"
+        "id": "hd_c5_g2",
+        "groupName": "推薦收聽的podcast/youtuber?",
+        "questions": [
+          {
+            "id": "hd_c5_52",
+            "question": "雄雄遇見你",
+            "answer": "由本組創立，大學生常見的心理與關係主題~歡迎追蹤收聽喔! (網址): <a href=\"https://osa.nkust.edu.tw/p/406-1154-90619,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90619,r1783.php?Lang=zh-tw</a>"
+          },
+          {
+            "id": "hd_c5_53",
+            "question": "校外推薦",
+            "answer": "(已有資料，尚待放上網頁)"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c6_6",
     "categoryName": "輔導股長/老師可以怎麼做?",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c6_61",
-        "question": "要怎麼擔任輔導股長?有哪些任務?",
-        "answer": "由各班同學進行幹部遴選，協助輔導同學之相關事務\n任務1：熟悉諮輔組功能\n任務2：加入社群、按讚諮輔組追蹤粉絲頁\n任務3：分享或參加諮輔組活動!\n協助留意同學們的情緒與困擾，並適時轉介給老師。",
-        "subCategory": "要怎麼擔任輔導股長?有哪些任務?"
+        "id": "hd_c6_g1",
+        "groupName": "要怎麼擔任輔導股長?有哪些任務?",
+        "questions": [
+          {
+            "id": "hd_c6_61",
+            "question": "要怎麼擔任輔導股長?有哪些任務?",
+            "answer": "由各班同學進行幹部遴選，協助輔導同學之相關事務\n任務1：熟悉諮輔組功能\n任務2：加入社群、按讚諮輔組追蹤粉絲頁\n任務3：分享或參加諮輔組活動!\n協助留意同學們的情緒與困擾，並適時轉介給老師。"
+          }
+        ]
       },
       {
-        "id": "hd_c6_62",
-        "question": "擔任輔導股長的好處?",
-        "answer": "1.學習助人技巧和心理健康知識，可以同時助人又利己喔。\n2.可以認識不同科系的同學。\n3.積極參與、表現優?者，會給予嘉獎?次，並學期末頒發感謝?鼓?乙張，感謝你協助捍衛同學身心健康的辛勞！",
-        "subCategory": "擔任輔導股長的好處?"
+        "id": "hd_c6_g2",
+        "groupName": "擔任輔導股長的好處?",
+        "questions": [
+          {
+            "id": "hd_c6_62",
+            "question": "擔任輔導股長的好處?",
+            "answer": "1.學習助人技巧和心理健康知識，可以同時助人又利己喔。\n2.可以認識不同科系的同學。\n3.積極參與、表現優?者，會給予嘉獎?次，並學期末頒發感謝?鼓?乙張，感謝你協助捍衛同學身心健康的辛勞！"
+          }
+        ]
       },
       {
-        "id": "hd_c6_63",
-        "question": "我是老師，碰到班上學生有些身心狀況，我可以怎麼做呢?",
-        "answer": "針對學生狀況可來電各系所輔導人員: <a href=\"https://osa.nkust.edu.tw/p/412-1154-10538.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10538.php</a>  諮詢，也可鼓勵學生使用學校諮輔資源及協助轉介(填寫轉介單): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10427.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10427.php</a>  至諮輔組。可於上班時間來電：\n平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)",
-        "subCategory": "我是老師，碰到班上學生有些身心狀況，我可以怎麼做呢?"
+        "id": "hd_c6_g3",
+        "groupName": "我是老師，碰到班上學生有些身心狀況，我可以怎麼做呢?",
+        "questions": [
+          {
+            "id": "hd_c6_63",
+            "question": "我是老師，碰到班上學生有些身心狀況，我可以怎麼做呢?",
+            "answer": "針對學生狀況可來電各系所輔導人員: <a href=\"https://osa.nkust.edu.tw/p/412-1154-10538.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10538.php</a>  諮詢，也可鼓勵學生使用學校諮輔資源及協助轉介(填寫轉介單): <a href=\"https://osa.nkust.edu.tw/p/412-1154-10427.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/412-1154-10427.php</a>  至諮輔組。可於上班時間來電：\n平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n電話：07-3814526\n分機12529 、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)"
+          }
+        ]
       },
       {
-        "id": "hd_c6_64",
-        "question": "怎麼辨識需要關心的學生呢?",
-        "answer": "1.遇特殊或重大事件者：喪親、車禍\n2.有心理或精神疾患之傾向或困擾者：憂鬱症、焦慮症等\n3.有感情、人際、課業學習或生涯…等方面之嚴重困擾者。\n4.有自我傷害或自殺危機者。\n一般性問題或困擾，如：學習、自我了解、壓力調適、時間管理、兩性相處、人際關係…等，老師們亦可建議學生至諮輔組主動求助喔!",
-        "subCategory": "怎麼辨識需要關心的學生呢?"
+        "id": "hd_c6_g4",
+        "groupName": "怎麼辨識需要關心的學生呢?",
+        "questions": [
+          {
+            "id": "hd_c6_64",
+            "question": "怎麼辨識需要關心的學生呢?",
+            "answer": "1.遇特殊或重大事件者：喪親、車禍\n2.有心理或精神疾患之傾向或困擾者：憂鬱症、焦慮症等\n3.有感情、人際、課業學習或生涯…等方面之嚴重困擾者。\n4.有自我傷害或自殺危機者。\n一般性問題或困擾，如：學習、自我了解、壓力調適、時間管理、兩性相處、人際關係…等，老師們亦可建議學生至諮輔組主動求助喔!"
+          }
+        ]
       },
       {
-        "id": "hd_c6_65",
-        "question": "當學生不願意來諮輔組怎麼辦?",
-        "answer": "1.探詢擔憂，釐清對諮輔組的誤解。\n2.在學生同意留下聯絡方式給院系專輔人員，由我們主動聯繫學生。\n3.請老師或信任的朋友協助陪同。\n4.安排實施心理測驗、專題演講的方式，增加諮輔組與學生接觸的機會。\n5.邀請學生參加諮商組所辦的輔導活動，增加生活化及可接近性。",
-        "subCategory": "當學生不願意來諮輔組怎麼辦?"
+        "id": "hd_c6_g5",
+        "groupName": "當學生不願意來諮輔組怎麼辦?",
+        "questions": [
+          {
+            "id": "hd_c6_65",
+            "question": "當學生不願意來諮輔組怎麼辦?",
+            "answer": "1.探詢擔憂，釐清對諮輔組的誤解。\n2.在學生同意留下聯絡方式給院系專輔人員，由我們主動聯繫學生。\n3.請老師或信任的朋友協助陪同。\n4.安排實施心理測驗、專題演講的方式，增加諮輔組與學生接觸的機會。\n5.邀請學生參加諮商組所辦的輔導活動，增加生活化及可接近性。"
+          }
+        ]
       },
       {
-        "id": "hd_c6_66",
-        "question": "我是老師，想了解諮輔組項目中的「教師升等指標」",
-        "answer": "升等指標之項目，主要針對協助諮輔組所服務之學生為主，可參考下面細項(請點選): <a href=\"https://stu.nkust.edu.tw/p/404-1007-70464.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://stu.nkust.edu.tw/p/404-1007-70464.php</a>",
-        "subCategory": "我是老師，想了解諮輔組項目中的「教師升等指標」"
+        "id": "hd_c6_g6",
+        "groupName": "我是老師，想了解諮輔組項目中的「教師升等指標」",
+        "questions": [
+          {
+            "id": "hd_c6_66",
+            "question": "我是老師，想了解諮輔組項目中的「教師升等指標」",
+            "answer": "升等指標之項目，主要針對協助諮輔組所服務之學生為主，可參考下面細項(請點選): <a href=\"https://stu.nkust.edu.tw/p/404-1007-70464.php\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://stu.nkust.edu.tw/p/404-1007-70464.php</a>"
+          }
+        ]
       }
     ]
   },
   {
     "id": "hd_c7_7",
     "categoryName": "休學/離校後的資源/其他疑問",
-    "questions": [
+    "questions": [],
+    "groups": [
       {
-        "id": "hd_c7_71",
-        "question": "休學後還可以預約學校的諮商嗎?",
-        "answer": "可以的喔。諮商輔導組服務本校所有\"具備學籍\"的學生。因此休學還是可以使用學校諮商資源的！(若是畢業或其他原因退學離校則可參考校外諮詢資源)",
-        "subCategory": "休學後還可以預約學校的諮商嗎?"
+        "id": "hd_c7_g1",
+        "groupName": "休學後還可以預約學校的諮商嗎?",
+        "questions": [
+          {
+            "id": "hd_c7_71",
+            "question": "休學後還可以預約學校的諮商嗎?",
+            "answer": "可以的喔。諮商輔導組服務本校所有\"具備學籍\"的學生。因此休學還是可以使用學校諮商資源的！(若是畢業或其他原因退學離校則可參考校外諮詢資源)"
+          }
+        ]
       },
       {
-        "id": "hd_c7_72",
-        "question": "哪裡有校外諮詢資源?",
-        "answer": "Line的AI心靈會客室: <a href=\"https://line.me/R/ti/p/%40872ohpkw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://line.me/R/ti/p/%40872ohpkw</a>\n校外資源一覽表: <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n鄰近諮商所、身心科、醫療資源:  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n高雄市心理衛生、精神醫療:  <a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf</a>",
-        "subCategory": "哪裡有校外諮詢資源?"
+        "id": "hd_c7_g2",
+        "groupName": "哪裡有校外諮詢資源?",
+        "questions": [
+          {
+            "id": "hd_c7_72",
+            "question": "哪裡有校外諮詢資源?",
+            "answer": "Line的AI心靈會客室: <a href=\"https://line.me/R/ti/p/%40872ohpkw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://line.me/R/ti/p/%40872ohpkw</a>\n校外資源一覽表: <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n鄰近諮商所、身心科、醫療資源:  <a href=\"https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/p/406-1154-90391,r1783.php?Lang=zh-tw</a>\n高雄市心理衛生、精神醫療:  <a href=\"https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:text-blue-800 underline\">https://osa.nkust.edu.tw/var/file/154/1154/img/2082/578337625.pdf</a>"
+          }
+        ]
       },
       {
-        "id": "hd_c7_73",
-        "question": "以上都沒有我要的答案",
-        "answer": "很抱歉無法回答到您的問題，歡迎與我們聯繫，我們將協助您處理。\n方法1：\n平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n電話：07-3814526\n分機12529、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)\n\n方法2：\n心理諮詢信箱：dboffice01@nkust.edu.tw\n請敘明姓名、學號、問題、聯繫電話以利回覆或聯繫喔!",
-        "subCategory": "以上都沒有我要的答案"
+        "id": "hd_c7_g3",
+        "groupName": "以上都沒有我要的答案",
+        "questions": [
+          {
+            "id": "hd_c7_73",
+            "question": "以上都沒有我要的答案",
+            "answer": "很抱歉無法回答到您的問題，歡迎與我們聯繫，我們將協助您處理。\n方法1：\n平日 建工、楠梓 服務時間為週一至週五，09：00 － 21：00；第一、燕巢、旗津 服務時間為週一至週五，09：00 － 17：00\n電話：07-3814526\n分機12529、12550 (建工)\n分機31248(第一)\n分機22093(楠梓)\n分機18632、18634(燕巢)\n分機25091(旗津)\n\n方法2：\n心理諮詢信箱：dboffice01@nkust.edu.tw\n請敘明姓名、學號、問題、聯繫電話以利回覆或聯繫喔!"
+          }
+        ]
       }
     ]
   }
