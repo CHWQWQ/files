@@ -64,6 +64,32 @@
         }
         details.grp[open] > summary .grp-pill::before { transform: rotate(90deg); }
         details.grp > summary .grp-line { flex: 1; height: 1px; background-color: #c9d3e6; }
+
+        /* 滑鼠移過去的放大效果
+           只在「有滑鼠的裝置」才會有；系統設定了「減少動態效果」的使用者不會放大 */
+        @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+            details.cat > summary,
+            details.grp > summary .grp-pill,
+            details.q > summary {
+                transition: transform .15s ease, box-shadow .15s ease, color .15s ease;
+            }
+            /* 類別(灰色膠囊):整條稍微放大並浮起 */
+            details.cat > summary:hover {
+                transform: scale(1.02);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+            }
+            /* 分組(藍色膠囊):藍色標籤放大，往右長出去 */
+            details.grp > summary:hover .grp-pill {
+                transform: scale(1.08);
+                transform-origin: left center;
+                box-shadow: 0 4px 10px rgba(66, 91, 143, .35);
+            }
+            /* 問題:標題列微幅放大 */
+            details.q > summary:hover {
+                transform: scale(1.015);
+                transform-origin: left center;
+            }
+        }
         details.cat > summary::after { content: ""; flex: 1; height: 1px; background-color: #cfcfcf; }
 
         /* 橫向標籤樣式 */
@@ -257,7 +283,7 @@ function renderItem(q) {
 }
 
 function renderCats(data) {
-    return data.map((cat, catIndex) => {
+    return data.map(cat => {
         // 先放沒有分組的問題，再依序放各個分組（分組和類別一樣，是可收合的區塊，把自己的問題包在裡面）
         const direct = cat.questions.map(renderItem).join('');
         const groups = (cat.groups || []).map(g => `
@@ -266,8 +292,8 @@ function renderCats(data) {
                 <div>${g.questions.map(renderItem).join('')}</div>
             </details>`).join('');
 
-        // 類別標題(categoryName)放在 summary;預設只展開每個單位的第一個類別
-        return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2" data-first="${catIndex === 0 ? '1' : '0'}" ${catIndex === 0 ? 'open' : ''}>
+        // 類別標題(categoryName)放在 summary;預設全部收合，點一下才展開
+        return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2">
             <summary><span>${escapeHtml(cat.categoryName)}</span></summary>
             <div class="pt-2">${direct}${groups}</div>
         </details>`;
@@ -327,8 +353,8 @@ $('searchBox').addEventListener('input', (e) => {
         });
 
         cat.classList.toggle('hidden', !!kw && catHits === 0);
-        // 搜尋時:有結果的類別自動展開;清空搜尋後恢復成「只展開第一個類別」
-        cat.open = kw ? catHits > 0 : cat.dataset.first === '1';
+        // 搜尋時:有結果的類別自動展開;清空搜尋後恢復成全部收合
+        cat.open = kw ? catHits > 0 : false;
         // 沒有答案的小標題在搜尋時一律隱藏,避免單獨留在畫面上
         cat.querySelectorAll('.label').forEach(l => l.classList.toggle('hidden', !!kw));
         hits += catHits;
