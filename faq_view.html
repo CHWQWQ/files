@@ -261,7 +261,7 @@ function renderCats(data) {
         // 先放沒有分組的問題，再依序放各個分組（分組和類別一樣，是可收合的區塊，把自己的問題包在裡面）
         const direct = cat.questions.map(renderItem).join('');
         const groups = (cat.groups || []).map(g => `
-            <details class="grp" open>
+            <details class="grp">
                 <summary><span class="grp-pill">${escapeHtml(g.groupName)}</span><span class="grp-line"></span></summary>
                 <div>${g.questions.map(renderItem).join('')}</div>
             </details>`).join('');
@@ -319,11 +319,11 @@ $('searchBox').addEventListener('input', (e) => {
             if (match) catHits++;
         });
 
-        // 分組:沒有符合的問題就隱藏;搜尋時有結果的自動展開,清空後恢復展開
+        // 分組:沒有符合的問題就隱藏;搜尋時有結果的自動展開,清空後恢復成收合
         cat.querySelectorAll('.grp').forEach(g => {
             const gHits = [...g.querySelectorAll('.q-wrapper')].filter(w => !w.classList.contains('hidden')).length;
             g.classList.toggle('hidden', !!kw && gHits === 0);
-            g.open = kw ? gHits > 0 : true;
+            g.open = kw ? gHits > 0 : false;
         });
 
         cat.classList.toggle('hidden', !!kw && catHits === 0);
