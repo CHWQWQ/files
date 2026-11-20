@@ -1,471 +1,746 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>常見問題 FAQ - 國立高雄科技大學 學務處</title>
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 高科大專屬配色與截圖配色 */
-        :root {
-            --nkust-blue: #003366; 
-            --tab-blue: #003366; 
-        }
-        .nkust-bg-blue { background-color: var(--nkust-blue); }
-        .nkust-text-blue { color: var(--nkust-blue); }
-        
-        details > summary { list-style: none; cursor: pointer; }
-        details > summary::-webkit-details-marker { display: none; }
-        
-        details[open] > summary .chev { transform: rotate(180deg); }
-        details[open] > summary {
-            background-color: #f8fafc;
-        }
-        .chev { transition: transform .3s ease; }
-        
-        .q-wrapper { border-bottom: 1px solid #e5e7eb; }
-        .q-wrapper:last-child { border-bottom: none; }
+import csv
+import os
+import re
+import shutil
+import subprocess
+import time
+import cv2
+import numpy as np
+import torch
+import rfdetr
+from rapidocr_onnxruntime import RapidOCR
 
-        /* 類別標題(灰色膠囊,可收合) */
-        details.cat > summary {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 26px; border-radius: 9999px;
-            background-color: #efefef; color: #333;
-            font-size: 1.05rem; font-weight: 700;
-        }
-        details.cat[open] > summary { background-color: #efefef; }
-        /* 箭頭用 CSS 畫出來(不用 ▶ 文字,避免被系統換成藍色表情符號) */
-        details.cat > summary::before {
-            content: "";
-            border-left: 8px solid #555;
-            border-top: 5px solid transparent;
-            border-bottom: 5px solid transparent;
-            transition: transform .15s;
-        }
-        details.cat[open] > summary::before { transform: rotate(90deg); }
+# ================= 測試時間與剪輯秒數設定區 =================
+START_MINUTE = 133           # 從第 133 分鐘開始測試（要剪整部影片請改為 0）
+TEST_DURATION_MIN = 3        # 測試幾分鐘（要剪整部影片請改為 999）
 
-        /* 分組標題(藍底白字,可收合;和類別一樣把底下的問題包起來) */
-        details.grp { margin: 14px 0 4px; }
-        details.grp > summary { display: flex; align-items: center; gap: 12px; }
-        details.grp[open] > summary { background-color: transparent; }
-        details.grp > summary .grp-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 6px 18px; border-radius: 9999px;
-            background-color: #425b8f; color: #fff;
-            font-size: .9rem; font-weight: 700;
-        }
-        details.grp > summary .grp-pill::before {
-            content: "";
-            border-left: 7px solid #fff;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            transition: transform .15s;
-        }
-        details.grp[open] > summary .grp-pill::before { transform: rotate(90deg); }
-        details.grp > summary .grp-line { flex: 1; height: 1px; background-color: #c9d3e6; }
+MODEL_PATH = "checkpoint_best_total.pth"  # 你訓練好的模型
+SCORE_ROI = (480, 958, 1452, 1054)        # TPBL 記分板座標
 
-        /* 滑鼠移過去的放大效果
-           只在「有滑鼠的裝置」才會有；系統設定了「減少動態效果」的使用者不會放大 */
-        @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-            details.cat > summary,
-            details.grp > summary .grp-pill,
-            details.q > summary {
-                transition: transform .15s ease, box-shadow .15s ease, color .15s ease;
-            }
-            /* 類別(灰色膠囊):整條稍微放大並浮起 */
-            details.cat > summary:hover {
-                transform: scale(1.02);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
-            }
-            /* 分組(藍色膠囊):藍色標籤放大，往右長出去 */
-            details.grp > summary:hover .grp-pill {
-                transform: scale(1.08);
-                transform-origin: left center;
-                box-shadow: 0 4px 10px rgba(66, 91, 143, .35);
-            }
-            /* 問題:標題列微幅放大 */
-            details.q > summary:hover {
-                transform: scale(1.015);
-                transform-origin: left center;
-            }
-        }
-        details.cat > summary::after { content: ""; flex: 1; height: 1px; background-color: #cfcfcf; }
+# 片段時間結構：進入前 6.5s + 籃板區停留時間 + 離開後 6.0s
+PRE_ENTER_SEC = 6.5          # 球進入籃板區前幾秒開始剪（5.0 ~ 8.0）
+POST_EXIT_SEC = 6.0          # 球離開籃板區後保留幾秒（涵蓋記分板跳分）
+SCORE_WINDOW_SEC = 6.0       # 球離開籃板區後，觀察記分板幾秒內有沒有動
+EXIT_DEBOUNCE_SEC = 0.30     # 球連續離開籃板區超過 0.30 秒，才算真正離開
+REBOUND_INTERRUPT_SEC = 1.2  # 離框超過 1.2 秒若球再次進框（補籃/第二罰），立刻切換追蹤新球
 
-        /* 橫向標籤樣式 */
-        .tab-pill {
-            padding: 10px 20px;
-            border-radius: 9999px;
-            font-size: 14px;
-            font-weight: 700;
-            white-space: nowrap;
-            transition: background-color .2s, color .2s;
-        }
-        .tab-active {
-            background-color: #003366;
-            color: #fff;
-        }
-        .tab-inactive {
-            background-color: #efefef;
-            color: #333;
-        }
-        .tab-inactive:hover {
-            background-color: #e0e0e0;
-        }
+# 防重複與偵測門檻設定
+BALL_CONF_THRESHOLD = 0.16   # 籃球信心度門檻
+BOARD_CONF_THRESHOLD = 0.30  # 籃板信心度門檻
+POST_MADE_COOLDOWN_SEC = 3.5 # 進球後冷卻秒數（防止籃下發底線球誤觸發）
+OVERLAP_DEDUP_SEC = 3.5      # 兩個片段重疊超過幾秒視為同一波進攻（自動去重/合併）
 
-        /* 目錄 */
-        .toc-list { border-left: 2px solid #e5e7eb; overflow-y: auto; }
-        .toc-link { display: block; margin-left: -2px; padding: 6px 12px; line-height: 1.4; font-size: 14px; color: #6b7280; border-left: 3px solid transparent; }
-        .toc-link:hover { color: var(--nkust-blue); }
-        .toc-link.hidden { display: none; }
-        .toc-link.active { color: #111827; font-weight: 700; border-left-color: var(--nkust-blue); }
-        #content [id] { scroll-margin-top: 16px; }
-    </style>
-</head>
-<body class="min-h-screen bg-gray-50 font-sans">
-    
-    <!-- 頂部 Header -->
-    <div class="bg-[#00264d] text-white text-xs">
-    <div class="max-w-6xl mx-auto px-4 py-1.5 flex justify-end gap-5">
-        <a href="https://www.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學校首頁</a>
-        <a href="https://stu.nkust.edu.tw" target="_blank" rel="noopener" class="hover:underline">學務處官網</a>
-        <a href="#" class="hover:underline">English</a>
-    </div>
-</div>
+RIM_EXPAND_X = 40            # 籃板框往左右延伸 40px（涵蓋籃框）
+RIM_EXPAND_TOP = 25          # 籃板框往上延伸 25px
+RIM_EXPAND_BOTTOM = 55       # 籃板框往下延伸 55px（涵蓋籃框與籃網）
 
-<!-- 主標頭 -->
-<header class="nkust-bg-blue text-white shadow-md relative z-10">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <a href="https://stu.nkust.edu.tw" class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-white/15 border border-white/40 flex items-center justify-center text-xl font-bold">高科</div>
-            <div>
-                <div class="text-2xl font-bold tracking-wider leading-tight">國立高雄科技大學 <span class="font-normal border-l-2 border-white/30 pl-3 ml-2">學生事務處</span></div>
-                <div class="text-xs text-white/70 tracking-wide">National Kaohsiung University of Science and Technology</div>
-            </div>
-        </a>
-        <nav class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm">
-            <a href="https://stu.nkust.edu.tw" class="hover:underline">首頁</a>
-            <a href="index.html" class="hover:underline">常見問題</a>
-            <a href="https://stu.nkust.edu.tw" class="hover:underline">各組業務</a>
-        </nav>
-    </div>
-</header>
+SCAN_FPS = 15                # 每秒掃描 15 幀
+AI_INPUT_WIDTH = 1920        # 4K 縮放至 1080p 推論，兼顧小球解析度與速度
+# ===========================================================
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center ">FAQ
-        <br>
-            <div class="w-16 h-1 bg-gray-400 mx-auto rounded shadow-sm opacity-70"></div>
-        </h1>
+def select_video_file():
+    """讓使用者透過 Windows 檔案視窗、終端機編號或拖曳路徑選擇要剪輯的影片"""
+    video_exts = (".mp4", ".mkv", ".mov", ".avi", ".ts")
+    local_videos = sorted([
+        f for f in os.listdir(".")
+        if os.path.isfile(f) and f.lower().endswith(video_exts)
+    ])
 
-        <!-- 橫向主題標籤 (加入 overflow-x-auto 與 flex-nowrap 確保全部擠在同一列) -->
-        <div class="flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 mb-6 pb-2" id="topTabs"></div>
+    print("\n================ 請選擇要處理的比賽影片 ================")
+    print("  [0] 開啟 Windows 檔案選擇視窗（瀏覽任意資料夾）...")
+    for idx, fname in enumerate(local_videos, 1):
+        size_gb = os.path.getsize(fname) / (1024 ** 3)
+        print(f"  [{idx}] {fname}（{size_gb:.2f} GB）")
+    print("========================================================")
 
-        <!-- 內容區塊 -->
-        <main class="bg-white p-6 shadow-sm border border-t-0 border-gray-200 min-h-[500px]">
-            
-            <!-- 搜尋框 -->
-            <div class="relative mb-8">
-                <input id="searchBox" type="search" placeholder="請輸入關鍵字搜尋問題或答案…" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-gray-50 transition-all" aria-label="搜尋問題或答案" disabled>
-                <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </div>
+    while True:
+        choice = input("請輸入編號（直接按 Enter 開啟選擇視窗，或將影片拖曳至此）：").strip()
 
-            <!-- 狀態提示區 -->
-            <div id="status" class="hidden"></div>
-            
-            <!-- FAQ 手風琴列表區 -->
-            <div id="content" class="space-y-6"></div>
-            
-            <p id="noResult" class="hidden text-center text-gray-500 py-10 bg-white rounded-lg">找不到符合的問答，請嘗試更換搜尋關鍵字。</p>
-        </main>
-    </div>
+        if choice == "" or choice == "0":
+            try:
+                import tkinter as tk
+                from tkinter import filedialog
+                root = tk.Tk()
+                root.withdraw()
+                root.attributes("-topmost", True)
+                file_path = filedialog.askopenfilename(
+                    title="請選擇要自動剪輯的籃球影片",
+                    filetypes=[
+                        ("影片檔案", "*.mp4 *.mkv *.mov *.avi *.ts"),
+                        ("所有檔案", "*.*")
+                    ]
+                )
+                root.destroy()
+                if file_path and os.path.isfile(file_path):
+                    return file_path
+                print("⚠️ 未選擇任何檔案，請重新操作。")
+            except Exception as e:
+                print(f"⚠️ 無法開啟視窗（{e}），請直接貼上影片完整路徑：")
+                manual_path = input("影片路徑：").strip().strip('"').strip("'")
+                if os.path.isfile(manual_path):
+                    return manual_path
 
-    <script>
-const DEPARTMENTS = {
-    'shsd': '住宿服務組',
-    'saad': '就學服務組',
-    'clss': '生輔教中心',
-    'hd': '衛生保健組',
-    'esd': '課外活動組',
-    'scd': '諮商輔導組',
-    'hesp': '高教深耕'
-};
-const ALL = 'all';
+        elif choice.isdigit() and 1 <= int(choice) <= len(local_videos):
+            return os.path.abspath(local_videos[int(choice) - 1])
 
-const $ = (id) => document.getElementById(id);
-let dept = new URLSearchParams(location.search).get('dept');
-if (!(dept === ALL || dept in DEPARTMENTS)) dept = ALL;
+        else:
+            cleaned_path = choice.strip('"').strip("'")
+            if os.path.isfile(cleaned_path):
+                return os.path.abspath(cleaned_path)
+            print("❌ 找不到該編號或路徑，請重新輸入（按 Enter 可開啟視窗選檔）。")
 
-function escapeHtml(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+def load_custom_model(model_path):
+    """自動讀取 checkpoint_best_total.pth 的架構規模並啟用推論加速"""
+    abs_model_path = os.path.abspath(model_path)
+    if not os.path.exists(abs_model_path):
+        raise FileNotFoundError(f"找不到模型檔案：{abs_model_path}")
 
-function renderAnswer(raw) {
-    return escapeHtml(raw).replace(
-        /&lt;a href=&quot;(https?:\/\/(?:[^&\s]|&amp;)+)&quot;(?:(?!&gt;).)*?&gt;(.*?)&lt;\/a&gt;/g,
-        (m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline font-medium">${text}</a>`
-    );
-}
+    device_info = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+    print(f"運算裝置：{device_info}")
 
-function showStatus(html, kind) {
-    const box = $('status');
-    box.className = `rounded-lg p-5 mb-6 text-sm leading-relaxed border ${kind === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`;
-    box.innerHTML = html;
-    box.classList.remove('hidden');
-}
+    ckpt = torch.load(abs_model_path, map_location="cpu", weights_only=False)
+    args = ckpt.get("args", None) if isinstance(ckpt, dict) else None
 
-function renderTabs() {
-    const tabs = [[ALL, '全部'], ...Object.entries(DEPARTMENTS)];
-    $('topTabs').innerHTML = tabs.map(([k, v]) => {
-        const isActive = k === dept;
-        const styleClass = isActive ? 'tab-active' : 'tab-inactive';
-        return `<button value="${k}" class="dept-tab tab-pill ${styleClass}">${v}</button>`;
-    }).join('');
+    def get_arg(key, default=None):
+        if args is None:
+            return default
+        return args.get(key, default) if isinstance(args, dict) else getattr(args, key, default)
 
-    document.querySelectorAll('.dept-tab').forEach(btn => {
-        btn.addEventListener('click', (e) => switchDept(e.currentTarget.value));
-    });
-}
+    class_names = get_arg("class_names", None)
+    num_classes = len(class_names) if class_names else get_arg("num_classes", 2)
+    resolution = get_arg("resolution", None)
+    dec_layers = get_arg("dec_layers", None)
 
-// 舊格式相容：舊檔案若是「每題有 subCategory 欄位」或「用〔文字〕當標題的一筆資料」，自動轉成 類別 → 分組 → 問題
-function upgradeToGroups(data) {
-    const isHeading = q => /^〔[^〕]+〕$/.test(q.question.trim()) && !q.answer.trim();
-    data.forEach(cat => {
-        if (!cat.questions.some(q => q.subCategory || isHeading(q))) return;
-        const direct = [];
-        const groups = cat.groups ? cat.groups.slice() : [];
-        let current = null;
-        let fromHeading = false;
-        cat.questions.forEach(q => {
-            if (isHeading(q)) {
-                current = { groupName: q.question.trim().slice(1, -1).trim(), questions: [] };
-                groups.push(current);
-                fromHeading = true;
-                return;
-            }
-            const sub = (q.subCategory || '').trim();
-            if (sub) {
-                if (!current || current.groupName !== sub) {
-                    current = { groupName: sub, questions: [] };
-                    groups.push(current);
-                }
-                fromHeading = false;
-                current.questions.push(q);
-            } else if (current && fromHeading) {
-                current.questions.push(q);
-            } else {
-                current = null;
-                direct.push(q);
-            }
-        });
-        cat.questions = direct;
-        cat.groups = groups;
-    });
-    return data;
-}
+    if dec_layers is None and isinstance(ckpt, dict) and "model" in ckpt:
+        layer_indices = [
+            int(m.group(1))
+            for k in ckpt["model"].keys()
+            if (m := re.search(r"decoder\.layers\.(\d+)\.", k))
+        ]
+        if layer_indices:
+            dec_layers = max(layer_indices) + 1
 
-// 一筆問題：沒有答案的當小標題，其餘是可展開的問答卡片
-function renderItem(q) {
-    if (!q.answer.trim()) {
-        return `<p class="label pt-4 font-bold border-b border-gray-300 text-[#425b8f]" data-text="${escapeHtml(q.question)}">${escapeHtml(q.question)}</p>`;
-    }
-    return `
-    <div class="q-wrapper">
-        <details id="${escapeHtml(q.id)}" class="q group">
-            <summary class="flex items-start gap-3 py-4 hover:text-blue-800 transition-colors">
-                <span class="font-medium text-gray-800 group-open:text-blue-900 group-open:font-bold flex-1 leading-snug">${escapeHtml(q.question)}</span>
-                <svg class="chev w-5 h-5 text-gray-400 group-open:text-blue-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </summary>
-            <div class="ans pb-5 pt-1 pl-7 text-gray-700 leading-relaxed whitespace-pre-line">${renderAnswer(q.answer)}</div>
-        </details>
-    </div>`;
-}
+    priority_names = ["RFDETRSmall", "RFDETRMedium", "RFDETRNano", "RFDETRLarge", "RFDETRBase"]
+    if dec_layers == 4:
+        priority_names = ["RFDETRMedium", "RFDETRSmall", "RFDETRNano", "RFDETRLarge", "RFDETRBase"]
+    elif dec_layers == 2:
+        priority_names = ["RFDETRNano", "RFDETRSmall", "RFDETRMedium", "RFDETRLarge", "RFDETRBase"]
 
-function renderCats(data) {
-    return data.map(cat => {
-        // 先放沒有分組的問題，再依序放各個分組（分組和類別一樣，是可收合的區塊，把自己的問題包在裡面）
-        const direct = cat.questions.map(renderItem).join('');
-        const groups = (cat.groups || []).map(g => `
-            <details class="grp">
-                <summary><span class="grp-pill">${escapeHtml(g.groupName)}</span><span class="grp-line"></span></summary>
-                <div>${g.questions.map(renderItem).join('')}</div>
-            </details>`).join('');
+    model = None
+    last_err = None
+    for cls_name in priority_names:
+        model_cls = getattr(rfdetr, cls_name, None)
+        if model_cls is None:
+            continue
+        try:
+            kwargs = {"pretrain_weights": abs_model_path, "num_classes": num_classes}
+            if isinstance(resolution, int):
+                kwargs["resolution"] = resolution
+            model = model_cls(**kwargs)
+            print(f"✅ 成功以 {cls_name} 架構載入模型（類別：{class_names}）")
+            break
+        except Exception as e:
+            last_err = e
+            try:
+                model = model_cls(pretrain_weights=abs_model_path, num_classes=num_classes)
+                print(f"✅ 成功以 {cls_name} 架構載入模型（類別：{class_names}）")
+                break
+            except Exception as e2:
+                last_err = e2
 
-        // 類別標題(categoryName)放在 summary;預設全部收合，點一下才展開
-        return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2">
-            <summary><span>${escapeHtml(cat.categoryName)}</span></summary>
-            <div class="pt-2">${direct}${groups}</div>
-        </details>`;
-    }).join('');
-}
+    if model is None:
+        raise RuntimeError(f"無法自動匹配模型架構，最後錯誤訊息：{last_err}")
 
-function render(results) {
-    const multi = dept === ALL;
-    document.title = `${multi ? '全部' : DEPARTMENTS[dept]}常見問題 FAQ`;
+    if hasattr(model, "optimize_for_inference"):
+        try:
+            model.optimize_for_inference()
+        except Exception:
+            pass
 
-    $('content').innerHTML = results.map(({ key, data }) => `
-        <div class="dept-block mb-8" data-dept="${key}">
-            ${multi ? `<h2 class="text-xl font-bold text-[#003366] border-l-4 border-[#003366] pl-3 mb-4 mt-6">${escapeHtml(DEPARTMENTS[key])}</h2>` : ''}
-            <div class="space-y-6">${renderCats(data)}</div>
-        </div>`).join('');
+    return model
 
-    $('searchBox').disabled = false;
-    $('status').classList.add('hidden');
-    const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
-    if (target && target.tagName === 'DETAILS') {
-        const parentCat = target.closest('details.cat');
-        if (parentCat) parentCat.open = true;
-        const parentGrp = target.closest('details.grp');
-        if (parentGrp) parentGrp.open = true;
-        target.open = true;
-        target.scrollIntoView();
-    }
-}
+def predict_fast(model, frame):
+    """將 4K 畫面等比例縮放至 1080p 寬度進行推論，兼顧小球解析度與速度"""
+    orig_h, orig_w = frame.shape[:2]
+    if orig_w > AI_INPUT_WIDTH:
+        scale = AI_INPUT_WIDTH / orig_w
+        infer_img = cv2.resize(frame, (AI_INPUT_WIDTH, int(orig_h * scale)), interpolation=cv2.INTER_LINEAR)
+    else:
+        scale = 1.0
+        infer_img = frame
 
-function validate(data) {
-    const validQuestion = q => q && typeof q.id === 'string' && typeof q.question === 'string' && typeof q.answer === 'string';
-    const validGroup = g => g && typeof g.groupName === 'string' && Array.isArray(g.questions) && g.questions.every(validQuestion);
-    return Array.isArray(data) && data.length > 0 && data.every(c => c && typeof c.id === 'string' && typeof c.categoryName === 'string'
-        && Array.isArray(c.questions) && c.questions.every(validQuestion)
-        && (c.groups === undefined || (Array.isArray(c.groups) && c.groups.every(validGroup))));
-}
+    rgb_frame = cv2.cvtColor(infer_img, cv2.COLOR_BGR2RGB)
+    with torch.inference_mode():
+        detections = model.predict(rgb_frame, threshold=min(BALL_CONF_THRESHOLD, BOARD_CONF_THRESHOLD))
+    return detections, scale
 
-$('searchBox').addEventListener('input', (e) => {
-    const kw = e.target.value.trim().toLowerCase();
-    let hits = 0;
+def inspect_backboard_zone(detections, frame_height, scale=1.0):
+    """
+    檢查籃球是否進入籃板＋籃框熱區，並同時回傳最高信心度與偵測框資訊（供除錯日誌使用）
+    回傳：(是否命中熱區, 最高球信心度, 最高籃板信心度, 命中時的球框與籃板框列表)
+    """
+    if isinstance(detections, list):
+        detections = detections[0]
+    if detections is None or detections.class_id is None or len(detections.xyxy) == 0:
+        return False, 0.0, 0.0, []
 
-    document.querySelectorAll('#content .cat').forEach(cat => {
-        let catHits = 0;
+    balls = []
+    boards = []
+    confs = detections.confidence if detections.confidence is not None else [1.0] * len(detections.xyxy)
 
-        cat.querySelectorAll('.q-wrapper').forEach(wrap => {
-            const d = wrap.querySelector('details');
-            const match = !kw || d.textContent.toLowerCase().includes(kw);
-            wrap.classList.toggle('hidden', !match);
-            if (match) catHits++;
-        });
+    for box, cls_id, conf in zip(detections.xyxy, detections.class_id, confs):
+        x1, y1, x2, y2 = box / scale
+        area = (x2 - x1) * (y2 - y1)
+        cy = (y1 + y2) / 2.0
+        c_val = float(conf)
 
-        // 分組:沒有符合的問題就隱藏;搜尋時有結果的自動展開,清空後恢復成收合
-        cat.querySelectorAll('.grp').forEach(g => {
-            const gHits = [...g.querySelectorAll('.q-wrapper')].filter(w => !w.classList.contains('hidden')).length;
-            g.classList.toggle('hidden', !!kw && gHits === 0);
-            g.open = kw ? gHits > 0 : false;
-        });
+        if area > 2500:
+            if c_val >= BOARD_CONF_THRESHOLD and cy <= frame_height * 0.62:
+                boards.append(((x1, y1, x2, y2), int(cls_id), c_val))
+        else:
+            if c_val >= BALL_CONF_THRESHOLD:
+                balls.append(((x1, y1, x2, y2), int(cls_id), c_val))
 
-        cat.classList.toggle('hidden', !!kw && catHits === 0);
-        // 搜尋時:有結果的類別自動展開;清空搜尋後恢復成全部收合
-        cat.open = kw ? catHits > 0 : false;
-        // 沒有答案的小標題在搜尋時一律隱藏,避免單獨留在畫面上
-        cat.querySelectorAll('.label').forEach(l => l.classList.toggle('hidden', !!kw));
-        hits += catHits;
-    });
+    if not balls or not boards:
+        return False, 0.0, 0.0, []
 
-    document.querySelectorAll('#content .dept-block').forEach(block => {
-        const anyVisible = Array.from(block.querySelectorAll('.cat')).some(c => !c.classList.contains('hidden'));
-        block.classList.toggle('hidden', !!kw && !anyVisible);
-    });
+    hit = False
+    max_b_conf = 0.0
+    max_p_conf = 0.0
+    matched_boxes = []
 
-    $('noResult').classList.toggle('hidden', !kw || hits > 0);
-});
+    for (bx1, by1, bx2, by2), b_cls, b_conf in balls:
+        for (px1, py1, px2, py2), p_cls, p_conf in boards:
+            if b_cls == p_cls:
+                continue
+            if (bx1 <= px2 + RIM_EXPAND_X and bx2 >= px1 - RIM_EXPAND_X and
+                by1 <= py2 + RIM_EXPAND_BOTTOM and by2 >= py1 - RIM_EXPAND_TOP):
+                hit = True
+                max_b_conf = max(max_b_conf, b_conf)
+                max_p_conf = max(max_p_conf, p_conf)
+                matched_boxes = [
+                    ("BALL", (bx1, by1, bx2, by2), b_conf),
+                    ("BOARD", (px1, py1, px2, py2), p_conf)
+                ]
+    return hit, max_b_conf, max_p_conf, matched_boxes
 
-let loadToken = 0;
+def draw_detection_thumbnail(frame, matched_boxes, title_text, target_w=640):
+    """繪製偵測框與延伸熱區，並縮小成快照縮圖"""
+    vis = frame.copy()
+    for label, (x1, y1, x2, y2), conf in matched_boxes:
+        ix1, iy1, ix2, iy2 = map(int, (x1, y1, x2, y2))
+        if label == "BOARD":
+            # 綠色實線為模型抓到的籃板，黃色虛線為程式延伸的籃框熱區
+            cv2.rectangle(vis, (ix1, iy1), (ix2, iy2), (0, 220, 0), 3)
+            cv2.rectangle(vis, (ix1 - RIM_EXPAND_X, iy1 - RIM_EXPAND_TOP),
+                          (ix2 + RIM_EXPAND_X, iy2 + RIM_EXPAND_BOTTOM), (0, 220, 255), 2)
+            cv2.putText(vis, f"Board {conf:.2f}", (ix1, max(30, iy1 - 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 220, 0), 2)
+        else:
+            # 紅色框為抓到的籃球
+            cv2.rectangle(vis, (ix1, iy1), (ix2, iy2), (0, 60, 255), 3)
+            cv2.putText(vis, f"Ball {conf:.2f}", (ix1, max(30, iy1 - 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 60, 255), 2)
 
-function fetchDept(key) {
-    const src = `faq_${key}.json`;
-    return fetch(src)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => { if (!validate(data)) throw new Error('JSON 格式不正確'); return { key, data: upgradeToGroups(data) }; })
-        .catch(err => { throw { key, src, message: err.message }; });
-}
+    h, w = vis.shape[:2]
+    scale = target_w / w
+    thumb = cv2.resize(vis, (target_w, int(h * scale)), interpolation=cv2.INTER_AREA)
+    cv2.rectangle(thumb, (0, 0), (target_w, 32), (20, 20, 20), -1)
+    cv2.putText(thumb, title_text, (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
+    return thumb
 
-function loadDept() {
-    const token = ++loadToken;
-    const keys = dept === ALL ? Object.keys(DEPARTMENTS) : [dept];
+def build_score_debug_panel(frame, panel_w=640, panel_h=360, info_lines=None):
+    """建立第 3 格快照：顯示記分板原圖＋OCR 實際讀取的黑白二值化圖"""
+    panel = np.zeros((panel_h, panel_w, 3), dtype=np.uint8)
+    panel[:] = (30, 30, 30)
+    cv2.rectangle(panel, (0, 0), (panel_w, 32), (20, 20, 20), -1)
+    cv2.putText(panel, "3. Scoreboard OCR Check", (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
 
-    $('searchBox').value = '';
-    $('searchBox').disabled = true;
-    $('content').innerHTML = '';
-    $('noResult').classList.add('hidden');
-    showStatus('載入中…', 'info');
+    if frame is not None:
+        x1, y1, x2, y2 = SCORE_ROI
+        crop = frame[y1:y2, x1:x2]
+        if crop.size > 0:
+            ch, cw = crop.shape[:2]
+            disp_w = panel_w - 40
+            disp_h = max(30, int(ch * (disp_w / cw)))
+            crop_resized = cv2.resize(crop, (disp_w, disp_h))
+            panel[45:45 + disp_h, 20:20 + disp_w] = crop_resized
 
-    Promise.allSettled(keys.map(fetchDept)).then(settled => {
-        if (token !== loadToken) return;
+            # 同步顯示給 OCR 看的黑白二值化圖
+            bin_img = preprocess_score_roi(crop)
+            bin_resized = cv2.resize(bin_img, (disp_w, disp_h))
+            y_bin = 55 + disp_h
+            if y_bin + disp_h < panel_h:
+                panel[y_bin:y_bin + disp_h, 20:20 + disp_w] = bin_resized
 
-        const ok = settled.filter(s => s.status === 'fulfilled').map(s => s.value);
-        const failed = settled.filter(s => s.status === 'rejected').map(s => s.reason);
+    if info_lines:
+        y_txt = panel_h - 15 - (len(info_lines) - 1) * 28
+        for line in info_lines:
+            cv2.putText(panel, line, (20, y_txt), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (100, 255, 180), 2)
+            y_txt += 28
+    return panel
 
-        if (ok.length === 0) {
-            const f = failed[0];
-            showStatus(`讀取資料失敗。<br>檔案:<code>${escapeHtml(f.src)}</code>`, 'error');
-            return;
-        }
+def preprocess_score_roi(roi):
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    gray = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+    padded = cv2.copyMakeBorder(binary, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=0)
+    return cv2.cvtColor(padded, cv2.COLOR_GRAY2BGR)
 
-        render(ok);
+def extract_single_score(ocr_result):
+    if not ocr_result:
+        return None
+    raw_text = "".join([item[1] for item in ocr_result])
+    digits = re.sub(r"\D", "", raw_text)
+    return int(digits) if digits else None
 
-        if (failed.length > 0) {
-            const names = failed.map(f => DEPARTMENTS[f.key]).join('、');
-            showStatus(`以下組別目前沒有資料檔，已略過：${escapeHtml(names)}`, 'info');
-        }
-    });
-}
+def get_total_score(ocr_engine, frame):
+    x1, y1, x2, y2 = SCORE_ROI
+    crop = frame[y1:y2, x1:x2]
+    h, w = crop.shape[:2]
+    sy1, sy2 = int(h * 0.08), int(h * 0.72)
 
-function switchDept(k) {
-    if (k === dept) return;
-    dept = k;
-    history.pushState({ dept: k }, '', `?dept=${k}`);
-    renderTabs();
-    loadDept();
-}
+    left_roi  = crop[sy1:sy2, int(w * 0.22):int(w * 0.35)]
+    right_roi = crop[sy1:sy2, int(w * 0.66):int(w * 0.80)]
 
-window.addEventListener('popstate', () => {
-    const d = new URLSearchParams(location.search).get('dept');
-    dept = (d === ALL || d in DEPARTMENTS) ? d : ALL;
-    renderTabs();
-    loadDept();
-});
+    left_res, _  = ocr_engine(preprocess_score_roi(left_roi))
+    right_res, _ = ocr_engine(preprocess_score_roi(right_roi))
 
-renderTabs();
-loadDept();
-</script>
-    <footer class="bg-[#00264d] text-white mt-12 w-full flex-1">
-    <div class="max-w-6xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-3 text-sm leading-relaxed">
+    left_val = extract_single_score(left_res)
+    right_val = extract_single_score(right_res)
+    if left_val is None or right_val is None:
+        return None
+    return left_val + right_val
 
-        <div>
-            <div class=" font-bold mb-2 border-b border-white/20 pb-1">校區地址</div>
-            <div><div>第一校區</div>
-            <div>824005 高雄市燕巢區大學路1號</div>
-            <div>811532 高雄市楠梓區卓越路2號</div>
-            <div>07-6011000</div>   
-            </div>         
-            <div><div>燕巢校區</div>
-            <div>824004 高雄市燕巢區深中路58號</div>
-            <div>07-3814526</div>   
-            </div>         
-            <div><div>建工校區</div>
-            <div>807618 高雄市三民區建工路415號</div>
-            <div>07-3814526</div>   
-            </div>         
-            <div><div>旗津校區</div>
-            <div>805301 高雄市旗津區中洲三路482號</div>
-            <div>07-3814526</div>   
-            </div>         
-            <div><div>楠梓校區</div>
-            <div>811213 高雄市楠梓區海專路142號</div>
-            <div>07-3814526</div>   
-            </div>         
-        </div>
+def calc_overlap(seg1, seg2):
+    return max(0.0, min(seg1["clip_end"], seg2["clip_end"]) - max(seg1["clip_start"], seg2["clip_start"]))
 
-        <div>
-            <div class="font-bold mb-2 border-b border-white/20 pb-1">相關連結</div>
-            <ul class="space-y-1">
-                <li><a class="hover:underline" href="https://www.nkust.edu.tw" target="_blank" rel="noopener">學校首頁</a></li>
-                <li><a class="hover:underline" href="https://stu.nkust.edu.tw" target="_blank" rel="noopener">學務處官網</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="bg-black/25 text-center text-xs text-white/70 py-3">
-        Copyright © 國立高雄科技大學 學生事務處 All Rights Reserved.
-    </div>
-</footer>
-</body>
-</html>
+def deduplicate_plays(made_records, missed_records, overlap_threshold=OVERLAP_DEDUP_SEC):
+    """對事件紀錄進行去重與重疊合併，確保 CSV 日誌與輸出影片完全一一對應"""
+    raw_total = len(made_records) + len(missed_records)
+
+    clean_made = []
+    for rec in sorted(made_records, key=lambda x: x["clip_start"]):
+        if not clean_made:
+            clean_made.append(rec)
+        elif calc_overlap(clean_made[-1], rec) < overlap_threshold:
+            clean_made.append(rec)
+
+    filtered_missed = [
+        m_rec for m_rec in sorted(missed_records, key=lambda x: x["clip_start"])
+        if not any(calc_overlap(m_rec, made_rec) >= overlap_threshold for made_rec in clean_made)
+    ]
+
+    clean_missed = []
+    for rec in filtered_missed:
+        if not clean_missed:
+            clean_missed.append(rec)
+        else:
+            prev = clean_missed[-1]
+            if calc_overlap(prev, rec) >= overlap_threshold:
+                prev["clip_start"] = min(prev["clip_start"], rec["clip_start"])
+                prev["clip_end"] = max(prev["clip_end"], rec["clip_end"])
+                prev["exit_time"] = max(prev["exit_time"], rec["exit_time"])
+                prev["stay_sec"] = round(prev["exit_time"] - prev["enter_time"], 2)
+                prev["max_ball_conf"] = max(prev["max_ball_conf"], rec["max_ball_conf"])
+                prev["max_board_conf"] = max(prev["max_board_conf"], rec["max_board_conf"])
+                prev["reason"] = "連續補籃未進（已自動合併）"
+            else:
+                clean_missed.append(rec)
+
+    removed_or_merged = raw_total - (len(clean_made) + len(clean_missed))
+    if removed_or_merged > 0:
+        print(f"\n🧹 已自動過濾／合併 {removed_or_merged} 個重複或重疊片段。")
+
+    return clean_made, clean_missed
+
+def format_mmss(seconds):
+    m = int(seconds // 60)
+    s = seconds % 60
+    return f"{m:02d}:{s:04.1f}"
+
+def export_individual_clips_and_logs(video_path, made_records, missed_records, output_base):
+    """輸出獨立 MP4 片段，並同步產生 events_log.csv 與 debug_snapshots 除錯快照圖"""
+    os.makedirs(output_base, exist_ok=True)
+    snap_dir = os.path.join(output_base, "debug_snapshots")
+    os.makedirs(snap_dir, exist_ok=True)
+
+    has_ffmpeg = shutil.which("ffmpeg") is not None
+    if not has_ffmpeg:
+        print("⚠️ 找不到 ffmpeg，將僅輸出推論日誌與快照圖。")
+
+    groups = [
+        (made_records, os.path.join(output_base, "clips_made"), "made", "有進的球"),
+        (missed_records, os.path.join(output_base, "clips_missed"), "missed", "沒進的球"),
+    ]
+
+    all_final_records = []
+
+    for records, folder_name, prefix, label in groups:
+        print(f"\n================ 【{label}】清單（共 {len(records)} 段） ================")
+        if not records:
+            print(f"此區間內無「{label}」片段。")
+            continue
+
+        os.makedirs(folder_name, exist_ok=True)
+        for idx, rec in enumerate(records, 1):
+            start_t = rec["clip_start"]
+            end_t = rec["clip_end"]
+            m = int(start_t // 60)
+            s = int(start_t % 60)
+
+            clip_filename = f"{prefix}_{idx:03d}_{m}m{s:02d}s.mp4"
+            snap_filename = f"{prefix}_{idx:03d}_{m}m{s:02d}s.jpg"
+            rec["clip_filename"] = clip_filename
+            rec["snap_filename"] = snap_filename
+
+            print(f"  {idx}. {clip_filename} ｜ {format_mmss(start_t)} ~ {format_mmss(end_t)}（總長 {end_t - start_t:.1f}s）")
+
+            # 1. 輸出三格視覺除錯快照圖
+            t1 = rec.get("enter_thumb")
+            t2 = rec.get("exit_thumb")
+            t3 = rec.get("score_panel")
+            if t1 is not None and t2 is not None and t3 is not None:
+                target_h = t1.shape[0]
+                t2_resized = cv2.resize(t2, (t1.shape[1], target_h))
+                t3_resized = cv2.resize(t3, (t1.shape[1], target_h))
+                combined_snap = np.hstack([t1, t2_resized, t3_resized])
+                cv2.imwrite(os.path.join(snap_dir, snap_filename), combined_snap)
+
+            # 2. 輸出獨立 MP4 片段
+            if has_ffmpeg:
+                out_file = os.path.join(folder_name, clip_filename)
+                duration = end_t - start_t
+                subprocess.run([
+                    "ffmpeg", "-y", "-loglevel", "error",
+                    "-ss", f"{start_t:.2f}", "-i", video_path, "-t", f"{duration:.2f}",
+                    "-c", "copy", out_file
+                ], check=True)
+
+            all_final_records.append(rec)
+
+    # 3. 寫入結構化推論執行日誌（events_log.csv，使用 utf-8-sig 確保 Excel 開啟中文不亂碼）
+    all_final_records.sort(key=lambda x: x["clip_start"])
+    csv_path = os.path.join(output_base, "events_log.csv")
+    headers = [
+        "片段檔名", "系統判定", "片段開始", "片段結束", "球進框時間", "球離框時間",
+        "框區停留秒數", "最高球信心度", "最高籃板信心度", "進框前基準分",
+        "離框後讀取分", "分數變化", "判定依據", "快照檔名",
+        "人工確認(正確/漏判/誤判)", "備註原因"
+    ]
+
+    with open(csv_path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        for r in all_final_records:
+            writer.writerow([
+                r["clip_filename"],
+                r["status"],
+                format_mmss(r["clip_start"]),
+                format_mmss(r["clip_end"]),
+                format_mmss(r["enter_time"]),
+                format_mmss(r["exit_time"]),
+                r["stay_sec"],
+                r["max_ball_conf"],
+                r["max_board_conf"],
+                r["baseline_score"],
+                r["final_score"],
+                f"+{r['score_diff']}" if r["score_diff"] > 0 else "0",
+                r["reason"],
+                r["snap_filename"],
+                "",  # 預留給人工標註統計準確率
+                ""
+            ])
+
+    print(f"\n📊 推論執行日誌已建立：{csv_path}")
+    print(f"🖼️ 三格除錯快照已存至：{snap_dir}\\")
+
+def main():
+    video_path = select_video_file()
+    video_name = os.path.basename(video_path)
+    video_stem = os.path.splitext(video_name)[0]
+    print(f"\n🎬 已選擇影片：{video_path}")
+
+    t0 = time.time()
+    model = load_custom_model(MODEL_PATH)
+    ocr = RapidOCR()
+
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration_sec = total_frames / fps
+
+    start_sec = START_MINUTE * 60.0
+    if start_sec >= duration_sec:
+        cap.release()
+        raise ValueError(f"設定的 START_MINUTE ({START_MINUTE} 分鐘) 超過影片總長度 ({duration_sec/60:.1f} 分鐘)！")
+
+    end_sec = min(duration_sec, (START_MINUTE + TEST_DURATION_MIN) * 60.0)
+    start_frame = int(start_sec * fps)
+    end_frame = int(end_sec * fps)
+
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+    frame_step = max(1, int(round(fps / SCAN_FPS)))
+    ocr_step = max(1, int(round(fps * 0.35)))
+
+    state = "IDLE"
+    enter_time = 0.0
+    last_in_zone_time = 0.0
+    exit_time = 0.0
+    deadline_time = 0.0
+    baseline_score = 0
+    last_observed_score = 0
+    cooldown_until = 0.0
+    last_ocr_frame = -999
+    last_progress_sec = start_sec
+
+    # 當前回合的日誌追蹤變數
+    max_ball_conf = 0.0
+    max_board_conf = 0.0
+    enter_thumb = None
+    exit_thumb = None
+    last_zone_frame = None
+    last_zone_boxes = []
+    last_score_frame = None
+
+    pending_diff = None
+    confirm_count = 0
+
+    made_records = []
+    missed_records = []
+
+    print(f"開始分析區間：{format_mmss(start_sec)} ~ {format_mmss(end_sec)}（共 {end_sec - start_sec:.0f} 秒）...")
+
+    frame_idx = start_frame
+    while frame_idx <= end_frame:
+        current_time = frame_idx / fps
+
+        if current_time - last_progress_sec >= 30.0:
+            elapsed = time.time() - t0
+            print(f"...掃描進度：{format_mmss(current_time)}（已耗時 {elapsed:.1f} 秒）")
+            last_progress_sec = current_time
+
+        is_ai_step = ((frame_idx - start_frame) % frame_step == 0)
+        is_ocr_step = (frame_idx - last_ocr_frame >= ocr_step)
+
+        need_frame = False
+        if current_time >= cooldown_until:
+            if state in ("IDLE", "IN_ZONE"):
+                need_frame = is_ai_step
+            elif state == "WATCHING_SCORE":
+                need_frame = (current_time > deadline_time) or is_ocr_step or (
+                    is_ai_step and (current_time - exit_time >= REBOUND_INTERRUPT_SEC)
+                )
+
+        if not need_frame:
+            if not cap.grab():
+                break
+            frame_idx += 1
+            continue
+
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # 階段 1：偵測球進入籃板熱區
+        if state == "IDLE":
+            detections, scale = predict_fast(model, frame)
+            hit, b_conf, p_conf, boxes = inspect_backboard_zone(detections, frame_height, scale)
+            if hit:
+                score_now = get_total_score(ocr, frame)
+                if score_now is not None:
+                    enter_time = current_time
+                    last_in_zone_time = current_time
+                    baseline_score = score_now
+                    last_observed_score = score_now
+                    max_ball_conf = b_conf
+                    max_board_conf = p_conf
+                    enter_thumb = draw_detection_thumbnail(
+                        frame, boxes, f"1. Enter Rim [{format_mmss(enter_time)}]"
+                    )
+                    last_zone_frame = frame.copy()
+                    last_zone_boxes = boxes
+                    last_score_frame = frame.copy()
+                    state = "IN_ZONE"
+                    print(f"[{format_mmss(enter_time)}] 🏀 球進入籃板區（基準總分：{baseline_score}｜球信心度：{b_conf:.2f}）...")
+
+        # 階段 2：球正在籃板區內停留／彈框
+        elif state == "IN_ZONE":
+            detections, scale = predict_fast(model, frame)
+            hit, b_conf, p_conf, boxes = inspect_backboard_zone(detections, frame_height, scale)
+            if hit:
+                last_in_zone_time = current_time
+                max_ball_conf = max(max_ball_conf, b_conf)
+                max_board_conf = max(max_board_conf, p_conf)
+                last_zone_frame = frame.copy()
+                last_zone_boxes = boxes
+            else:
+                if current_time - last_in_zone_time >= EXIT_DEBOUNCE_SEC:
+                    exit_time = last_in_zone_time
+                    deadline_time = exit_time + SCORE_WINDOW_SEC
+                    last_ocr_frame = frame_idx
+                    pending_diff = None
+                    confirm_count = 0
+                    exit_thumb = draw_detection_thumbnail(
+                        last_zone_frame, last_zone_boxes, f"2. Exit Rim [{format_mmss(exit_time)}]"
+                    )
+                    state = "WATCHING_SCORE"
+                    stay_sec = max(0.0, exit_time - enter_time)
+                    print(f"  -> [{format_mmss(exit_time)}] ↗️ 球離開籃板區（區內停留 {stay_sec:.1f}s），開始 6 秒記分板觀察...")
+
+            if state == "IN_ZONE" and (current_time - enter_time >= 5.0):
+                exit_time = current_time
+                deadline_time = exit_time + SCORE_WINDOW_SEC
+                last_ocr_frame = frame_idx
+                pending_diff = None
+                confirm_count = 0
+                exit_thumb = draw_detection_thumbnail(
+                    last_zone_frame, last_zone_boxes, f"2. Exit Rim [{format_mmss(exit_time)}]"
+                )
+                state = "WATCHING_SCORE"
+                print(f"  -> [{format_mmss(exit_time)}] ↗️ 球停留達上限，開始 6 秒記分板觀察...")
+
+        # 階段 3：球離開籃板區後，觀察 6 秒內記分板變動
+        elif state == "WATCHING_SCORE":
+            if is_ai_step and (current_time - exit_time >= REBOUND_INTERRUPT_SEC):
+                detections, scale = predict_fast(model, frame)
+                hit, b_conf, p_conf, boxes = inspect_backboard_zone(detections, frame_height, scale)
+                if hit:
+                    score_now = get_total_score(ocr, frame)
+                    if score_now is not None:
+                        clip_start = max(0.0, enter_time - PRE_ENTER_SEC)
+                        clip_end = min(duration_sec, current_time + 1.5)
+                        score_panel = build_score_debug_panel(
+                            last_score_frame, info_lines=[
+                                f"Base: {baseline_score} -> End: {last_observed_score}",
+                                "Result: MISSED (Rebound Interrupt)"
+                            ]
+                        )
+                        missed_records.append({
+                            "status": "MISSED",
+                            "clip_start": clip_start,
+                            "clip_end": clip_end,
+                            "enter_time": enter_time,
+                            "exit_time": exit_time,
+                            "stay_sec": round(exit_time - enter_time, 2),
+                            "max_ball_conf": round(max_ball_conf, 3),
+                            "max_board_conf": round(max_board_conf, 3),
+                            "baseline_score": baseline_score,
+                            "final_score": last_observed_score,
+                            "score_diff": 0,
+                            "reason": "出現連續補籃/新投籃，結算上一球",
+                            "enter_thumb": enter_thumb,
+                            "exit_thumb": exit_thumb,
+                            "score_panel": score_panel
+                        })
+                        print(f"  -> 🔴【沒進】[{format_mmss(current_time)}] 出現連續補籃/新投籃，結算上一球")
+
+                        enter_time = current_time
+                        last_in_zone_time = current_time
+                        baseline_score = score_now
+                        last_observed_score = score_now
+                        max_ball_conf = b_conf
+                        max_board_conf = p_conf
+                        enter_thumb = draw_detection_thumbnail(
+                            frame, boxes, f"1. Enter Rim [{format_mmss(enter_time)}]"
+                        )
+                        last_zone_frame = frame.copy()
+                        last_zone_boxes = boxes
+                        last_score_frame = frame.copy()
+                        state = "IN_ZONE"
+                        print(f"[{format_mmss(enter_time)}] 🏀 偵測到連續新投籃進入籃板區（基準總分：{baseline_score}）...")
+                        frame_idx += 1
+                        continue
+
+            if current_time <= deadline_time:
+                if is_ocr_step:
+                    last_ocr_frame = frame_idx
+                    new_score = get_total_score(ocr, frame)
+
+                    if new_score is not None:
+                        last_observed_score = new_score
+                        last_score_frame = frame.copy()
+                        diff = new_score - baseline_score
+                        if 1 <= diff <= 4:
+                            if diff == pending_diff:
+                                confirm_count += 1
+                            else:
+                                pending_diff = diff
+                                confirm_count = 1
+
+                            if confirm_count >= 2 or (current_time >= deadline_time - 0.6 and confirm_count >= 1):
+                                clip_start = max(0.0, enter_time - PRE_ENTER_SEC)
+                                clip_end = min(duration_sec, exit_time + POST_EXIT_SEC)
+                                delay_sec = round(current_time - exit_time, 1)
+                                score_panel = build_score_debug_panel(
+                                    last_score_frame, info_lines=[
+                                        f"Base: {baseline_score} -> End: {new_score} (+{diff})",
+                                        f"Result: MADE (at +{delay_sec}s)"
+                                    ]
+                                )
+                                made_records.append({
+                                    "status": "MADE",
+                                    "clip_start": clip_start,
+                                    "clip_end": clip_end,
+                                    "enter_time": enter_time,
+                                    "exit_time": exit_time,
+                                    "stay_sec": round(exit_time - enter_time, 2),
+                                    "max_ball_conf": round(max_ball_conf, 3),
+                                    "max_board_conf": round(max_board_conf, 3),
+                                    "baseline_score": baseline_score,
+                                    "final_score": new_score,
+                                    "score_diff": diff,
+                                    "reason": f"離框後{delay_sec}s記分板+{diff}分",
+                                    "enter_thumb": enter_thumb,
+                                    "exit_thumb": exit_thumb,
+                                    "score_panel": score_panel
+                                })
+                                print(f"  -> 🟢【有進】[{format_mmss(current_time)}] 離框後 {delay_sec}s 記分板 +{diff} 分（總分 {new_score}）")
+
+                                state = "IDLE"
+                                cooldown_until = exit_time + POST_MADE_COOLDOWN_SEC
+            else:
+                clip_start = max(0.0, enter_time - PRE_ENTER_SEC)
+                clip_end = min(duration_sec, exit_time + POST_EXIT_SEC)
+                score_panel = build_score_debug_panel(
+                    last_score_frame, info_lines=[
+                        f"Base: {baseline_score} -> End: {last_observed_score}",
+                        "Result: MISSED (No score change in 6s)"
+                    ]
+                )
+                missed_records.append({
+                    "status": "MISSED",
+                    "clip_start": clip_start,
+                    "clip_end": clip_end,
+                    "enter_time": enter_time,
+                    "exit_time": exit_time,
+                    "stay_sec": round(exit_time - enter_time, 2),
+                    "max_ball_conf": round(max_ball_conf, 3),
+                    "max_board_conf": round(max_board_conf, 3),
+                    "baseline_score": baseline_score,
+                    "final_score": last_observed_score,
+                    "score_diff": 0,
+                    "reason": "離框後6秒內記分板無變動",
+                    "enter_thumb": enter_thumb,
+                    "exit_thumb": exit_thumb,
+                    "score_panel": score_panel
+                })
+                print(f"  -> 🔴【沒進】[{format_mmss(current_time)}] 離框後 6 秒內記分板無變動")
+
+                state = "IDLE"
+                cooldown_until = current_time + 1.5
+
+        frame_idx += 1
+
+    cap.release()
+
+    made_records, missed_records = deduplicate_plays(made_records, missed_records)
+
+    output_base = f"output_{video_stem}"
+    export_individual_clips_and_logs(video_path, made_records, missed_records, output_base)
+    print(f"\n⏱️ 全部處理總耗時：{time.time() - t0:.1f} 秒")
+
+if __name__ == "__main__":
+    main()
