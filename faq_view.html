@@ -70,28 +70,20 @@
         details.grp[open] > summary .grp-pill::before { transform: rotate(90deg); }
         details.grp > summary .grp-line { flex: 1; height: 1px; background-color: #c9d3e6; }
 
-        /* ===== 點擊的放大效果:標題放大一下再彈回來 ===== */
-        @keyframes pop {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(var(--pop, 1.04)); }
-            100% { transform: scale(1); }
-        }
-        .pop { animation: pop .3s ease; }
-        details.cat > summary { --pop: 1.02; }            /* 寬的標題只放大一點點，避免超出畫面 */
-        details.grp > summary .grp-pill { --pop: 1.12; }  /* 小小的藍色標籤放大明顯一點 */
-        details.q > summary { --pop: 1.015; }
+        /* ===== 滑鼠滑過去時，標題稍微放大（按下去時不做任何動畫） ===== */
+        @media (hover: hover) {
+            details.cat > summary,
+            details.grp > summary .grp-pill,
+            details.q > summary { transition: transform .15s ease; }
 
-        /* 展開時:內容從小一點「長」出來 */
-        @keyframes grow-in {
-            from { opacity: 0; transform: scale(.97); }
-            to   { opacity: 1; transform: scale(1); }
+            details.cat > summary:hover { transform: scale(1.015); }          /* 寬的標題只放大一點點，避免超出畫面 */
+            details.grp > summary:hover .grp-pill { transform: scale(1.06); }  /* 小小的藍色標籤放大明顯一點 */
+            details.q > summary:hover { transform: scale(1.01); }
         }
-        details[open] > .body-anim,
-        details[open] > .ans { animation: grow-in .25s ease; transform-origin: top left; }
 
-        /* 如果使用者在系統設定裡關閉動態效果，就不播放 */
+        /* 如果使用者在系統設定裡關閉動態效果，就不要放大 */
         @media (prefers-reduced-motion: reduce) {
-            .pop, details[open] > .body-anim, details[open] > .ans { animation: none; }
+            details.cat > summary, details.grp > summary .grp-pill, details.q > summary { transition: none; transform: none !important; }
         }
 
         /* 階層縮排：每往下一層，就比上一層多縮排 2 個字元（1 個中文字 = 1em，所以是 2em）
@@ -332,13 +324,13 @@ function renderCats(data) {
         const groups = (cat.groups || []).map(g => `
             <details class="grp">
                 <summary><span class="grp-pill">${escapeHtml(g.groupName)}</span><span class="grp-line"></span></summary>
-                <div class="body-anim">${g.questions.map(renderItem).join('')}</div>
+                <div>${g.questions.map(renderItem).join('')}</div>
             </details>`).join('');
 
         // 類別標題(categoryName)放在 summary;預設全部收合，點一下才展開
         return `<details id="cat-${escapeHtml(cat.id)}" class="cat mb-2">
             <summary><span>${escapeHtml(cat.categoryName)}</span></summary>
-            <div class="pt-2 body-anim">${direct}${groups}</div>
+            <div class="pt-2">${direct}${groups}</div>
         </details>`;
     }).join('');
 }
@@ -459,19 +451,6 @@ function switchDept(k) {
     renderTabs();
     loadDept();
 }
-
-// 點擊標題(類別、分組、問題)時:標題放大一下再彈回來
-document.addEventListener('click', (e) => {
-    const summary = e.target.closest('summary');
-    if (!summary) return;
-    const el = summary.querySelector('.grp-pill') || summary;   // 分組只放大藍色標籤，不放大整條線
-    el.classList.remove('pop');
-    void el.offsetWidth;                                         // 讓動畫可以連續重播的小技巧
-    el.classList.add('pop');
-});
-document.addEventListener('animationend', (e) => {
-    if (e.target.classList && e.target.classList.contains('pop')) e.target.classList.remove('pop');
-});
 
 window.addEventListener('popstate', () => {
     const d = new URLSearchParams(location.search).get('dept');
